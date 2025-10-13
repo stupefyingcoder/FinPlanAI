@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { CSSTransition } from "react-transition-group"
-import "./loginTransitions.css" // Create this CSS file for transitions
+import "./loginTransitions.css" 
 import { useNavigate } from "react-router-dom";
 import { auth } from "../firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
@@ -294,4 +294,5 @@ export default function LoginPage() {
     </main>
   )
 }
+
 
