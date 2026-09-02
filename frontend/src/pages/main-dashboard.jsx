@@ -1,10 +1,11 @@
 import { useState } from "react"
-import { LayoutDashboard, Target, TrendingUp, User } from "lucide-react"
+import { LayoutDashboard, Target, TrendingUp, User, Sparkles } from "lucide-react"
 import DashboardTab from "./Dashboard/dashboard-tab"
 import ResultsTab from "./Dashboard/results-tab"
 import { MarketAnalysisTab } from "./Dashboard/market-analysis-tab"
 import { FinancialGoals } from "./Dashboard/financial-goals";
 import ProfileTab from "./Dashboard/profile-tab"
+import AIInsightsTab from "./Dashboard/ai-insights-tab"
 
 const MainDashboard = ({ userData }) => {
   const [activeTab, setActiveTab] = useState("dashboard")
@@ -14,6 +15,7 @@ const MainDashboard = ({ userData }) => {
     { id: "results", label: "Results", icon: Target },
     { id: "market", label: "Market Analysis", icon: TrendingUp },
     { id: "goals", label: "Financial Goals", icon: TrendingUp },
+    { id: "ai", label: "AI Insights", icon: Sparkles },
     { id: "profile", label: "Profile", icon: User },
   ]
 
@@ -27,6 +29,8 @@ const MainDashboard = ({ userData }) => {
         return <MarketAnalysisTab />
       case "goals":
         return <FinancialGoals />
+      case "ai":
+        return <AIInsightsTab />
       case "profile":
         return <ProfileTab userData={userData} />
       default:
