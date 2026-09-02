@@ -6,8 +6,8 @@ from typing import List, Tuple, Optional
 
 
 import google.generativeai as genai
-from schemas_v2 import NewCustomerProfile, DBCustomerProfile, SWOT, PlanText, CustomerPlanTexts
-from prompt import (
+from finplan_ml.schemas import NewCustomerProfile, DBCustomerProfile, SWOT, PlanText, CustomerPlanTexts
+from finplan_ml.prompts import (
     personalized_plan_prompt, peer_plan_prompt, safety_plan_prompt,
     swot_json_prompt
 )
@@ -15,10 +15,11 @@ from prompt import (
 # PyTorch model loading
 import torch
 import numpy as np
+from finplan_ml import config
 
 # Model and feature config
-MODEL_PATH = "data/model data/full_portfolio_model.pth"
-MODEL_EXPLANATION_PATH = "data/model data/model_explanation.json"
+MODEL_PATH = str(config.PORTFOLIO_MODEL_LEGACY)
+MODEL_EXPLANATION_PATH = str(config.MODEL_EXPLANATION)
 
 def load_allocation_model():
     try:
@@ -123,7 +124,7 @@ def kb_ingest_text(vs, text: str, source_id: str = "generated_note"):
         vs.add_texts([text], metadatas=[{"source": source_id}])
         # persist to disk if supported
         if hasattr(vs, "save_local"):
-            vs.save_local("rag_index_faiss")
+            vs.save_local(str(config.INDEX_DIR))
     except Exception:
         pass
 
@@ -133,7 +134,7 @@ def kb_ingest_text(vs, text: str, source_id: str = "generated_note"):
 
 def _get_gold_forecast_text():
     try:
-        with open("data/model data/model_output_forecast.json", "r", encoding="utf-8") as f:
+        with open(config.GOLD_FORECAST, "r", encoding="utf-8") as f:
             forecast = json.load(f)
         if not forecast:
             return ""

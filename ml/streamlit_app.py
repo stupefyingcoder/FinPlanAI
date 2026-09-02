@@ -18,10 +18,11 @@ from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 # Local modules
-from schemas_v2 import NewCustomerProfile, DBCustomerProfile
-from three_plan import generate_plan_texts
-from prompt import extract_profile_from_pdf_prompt
-from ai_agent_system import FinancialPlanningAgent, create_enhanced_agent, AgentState
+from finplan_ml.schemas import NewCustomerProfile, DBCustomerProfile
+from finplan_ml.planning import generate_plan_texts
+from finplan_ml.prompts import extract_profile_from_pdf_prompt
+from finplan_ml.agents.system import FinancialPlanningAgent, create_enhanced_agent, AgentState
+from finplan_ml import config
 
 
 # ============================== Config ============================== #
@@ -37,7 +38,7 @@ if not API_KEY:
 
 genai.configure(api_key=API_KEY)
 
-INDEX_DIR = "rag_index_faiss"
+INDEX_DIR = str(config.INDEX_DIR)
 CHUNK_SIZE = 900
 CHUNK_OVERLAP = 150
 
@@ -80,12 +81,7 @@ def load_customer_db() -> pd.DataFrame | None:
     """
     Load your customer CSV, if present.
     """
-    csv_paths = [
-        "chatbot_rag/chatbot_rag/chatbot/chatbot/real 1/data/finance_planning_customers_5000_v2_augmented_with_insurance_cat.csv",
-        "c:/Users/Sanika/OneDrive/Desktop/interview prep/chatbot_rag/chatbot_rag/chatbot/chatbot/real 1/data/finance_planning_customers_5000_v2_augmented_with_insurance_cat.csv",
-        "chatbot/chatbot/real 1/data/finance_planning_customers_5000_v2_augmented_with_insurance_cat.csv",
-        "data/finance_planning_customers_5000_v2_augmented_with_insurance_cat.csv","finchat/data/finance_planning_customers_5000_v2_augmented_with_insurance_cat.csv"
-    ]
+    csv_paths = [config.CUSTOMERS_CSV]
     for path in csv_paths:
         try:
             return pd.read_csv(path)
@@ -160,11 +156,11 @@ st.sidebar.subheader("📚 Knowledge Base (RAG)")
 kb_texts: List[str] = []
 
 # Optionally seed with local JSONs if present
-for base in ["cluster_meta.json", "customer_db.json"]:
+for base in [config.CLUSTER_META, config.CUSTOMER_DB]:
     if os.path.exists(base):
         try:
             with open(base, "r", encoding="utf-8") as f:
-                kb_texts.append(f"{base.upper()} JSON\n{f.read()}")
+                kb_texts.append(f"{base.name.upper()} JSON\n{f.read()}")
         except Exception:
             pass
 

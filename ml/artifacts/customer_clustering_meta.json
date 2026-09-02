@@ -1,0 +1,38 @@
+{
+  "model_file": "customer_clustering.joblib",
+  "estimator": "sklearn.pipeline.Pipeline(ColumnTransformer -> KMeans)",
+  "features_numeric": [
+    "Current_Net_Worth",
+    "Savings_Rate(%)",
+    "Goal_Amount(₹)"
+  ],
+  "features_categorical": [
+    "Primary_Financial_Goal"
+  ],
+  "n_clusters": 5,
+  "seed": 42,
+  "silhouette_score": 0.41991432410941515,
+  "silhouette_by_k": {
+    "3": 0.32755339657063276,
+    "4": 0.32533678625059637,
+    "5": 0.41991432410941515,
+    "6": 0.42691382122272464,
+    "7": 0.4601349141430741,
+    "8": 0.4581365972427315
+  },
+  "cluster_counts": {
+    "3": 1725,
+    "0": 1387,
+    "2": 973,
+    "1": 522,
+    "4": 393
+  },
+  "cluster_labels": {
+    "4": "High NW • Wealth (modest goals)",
+    "1": "High NW • Wealth (large goals)",
+    "2": "Low NW • Education",
+    "0": "Mid NW • House",
+    "3": "Mid NW • Retirement"
+  },
+  "sklearn_version": "1.9.0"
+}

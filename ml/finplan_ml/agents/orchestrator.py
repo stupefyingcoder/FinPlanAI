@@ -13,8 +13,8 @@ from abc import ABC, abstractmethod
 from pydantic import BaseModel, Field
 import google.generativeai as genai
 
-from schemas_v2 import NewCustomerProfile, DBCustomerProfile
-from ai_agent_system import (
+from finplan_ml.schemas import NewCustomerProfile, DBCustomerProfile
+from finplan_ml.agents.system import (
     FinancialPlanningAgent, AgentState, ConversationTurn, AgentMemory,
     RiskAssessmentTool, GoalPlanningTool, PortfolioAnalysisTool
 )

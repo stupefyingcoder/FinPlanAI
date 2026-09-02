@@ -18,7 +18,7 @@ from langchain_community.vectorstores import FAISS
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 # Import existing schemas
-from schemas_v2 import NewCustomerProfile, DBCustomerProfile, SWOT, PlanText, CustomerPlanTexts
+from finplan_ml.schemas import NewCustomerProfile, DBCustomerProfile, SWOT, PlanText, CustomerPlanTexts
 
 
 # ====================== Agent State Management ====================== #
@@ -46,7 +46,8 @@ class ConversationTurn(BaseModel):
 
 
 from typing import Union
-from schemas_v2 import NewCustomerProfile, DBCustomerProfile
+from finplan_ml.schemas import NewCustomerProfile, DBCustomerProfile
+from finplan_ml import config
 
 class AgentMemory(BaseModel):
     """Agent's working memory and conversation history"""
@@ -325,8 +326,9 @@ class FinancialPlanningAgent:
         self.memory = AgentMemory()
         self.vector_store = None
         
-    def initialize_vector_store(self, texts: List[str] = None, index_path: str = "rag_index_faiss"):
+    def initialize_vector_store(self, texts: List[str] = None, index_path: str = None):
         """Initialize or load vector store"""
+        index_path = index_path or str(config.INDEX_DIR)
         try:
             embeddings = GoogleGenerativeAIEmbeddings(
                 model=self.embed_model, 

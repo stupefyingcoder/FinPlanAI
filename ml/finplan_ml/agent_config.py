@@ -5,6 +5,7 @@ Configuration and setup for the AI Agent System
 import os
 from typing import Dict, Any
 from dataclasses import dataclass
+from finplan_ml import config
 
 @dataclass
 class AgentConfig:
@@ -16,7 +17,7 @@ class AgentConfig:
     embed_model: str = "models/text-embedding-004"
     
     # Vector Store Configuration
-    index_dir: str = "rag_index_faiss"
+    index_dir: str = str(config.INDEX_DIR)
     chunk_size: int = 900
     chunk_overlap: int = 150
     
@@ -41,9 +42,9 @@ class AgentConfig:
         """Create configuration from environment variables"""
         return cls(
             api_key=os.getenv("GEMINI_API_KEY", ""),
-            model_name=os.getenv("MODEL", "gemini-2.5-flash"),
+            model_name=config.GEMINI_MODEL,
             embed_model=os.getenv("EMBED_MODEL", "models/text-embedding-004"),
-            index_dir=os.getenv("INDEX_DIR", "rag_index_faiss"),
+            index_dir=os.getenv("INDEX_DIR", str(config.INDEX_DIR)),
             chunk_size=int(os.getenv("CHUNK_SIZE", "900")),
             chunk_overlap=int(os.getenv("CHUNK_OVERLAP", "150")),
             max_conversation_history=int(os.getenv("MAX_CONVERSATION_HISTORY", "20")),
