@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { TrendingUp, TrendingDown, RefreshCw, DollarSign, Coins, BarChart3 } from "lucide-react"
+import GoldForecastCard from "./GoldForecastCard"
 
 // ---- Custom UI Components (replacing shadcn/ui) ----
 const Card = ({ children, className = "" }) => (
@@ -93,6 +94,13 @@ export function MarketAnalysisTab() {
     change >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />
 
   return (
+    <>
+      <GoldForecastCard limit={60} />
+      <div className="mt-4 mb-6 text-xs text-gray-500 border-l-2 border-amber-300 pl-3">
+        The gold forecast above comes from the trained Prophet model. The index, stock,
+        commodity and currency figures below are illustrative sample data — this build has
+        no live market feed connected.
+      </div>
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -289,5 +297,6 @@ export function MarketAnalysisTab() {
         </CardContent>
       </Card>
     </div>
+    </>
   )
 }
