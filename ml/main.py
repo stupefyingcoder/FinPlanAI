@@ -1,70 +1,101 @@
-import os, json
-from dotenv import load_dotenv
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+"""Thin FastAPI surface over the ML package.
+
+A stepping stone: Phase 2 folds these routes into the single FastAPI backend that
+also owns auth, profiles and goals. Having them here now means the models are
+reachable over HTTP and testable before that port begins.
+
+Two changes from the original:
+
+1. Cluster assignment used a hand-written if/else ladder (`heuristic_cluster_map`)
+   while a trained K-Means model sat unused on disk. Segmentation now runs through
+   the fitted pipeline.
+2. A missing GEMINI_API_KEY raised at import, so the whole service refused to
+   start. The key is now required only by the endpoints that actually call Gemini,
+   which lets /health and the /ml/* routes work without one.
+"""
+
+from __future__ import annotations
+
 import google.generativeai as genai
-from prompt import bank_batch_prompt, user_plan_prompt
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 
-load_dotenv()
-API_KEY = os.getenv("GEMINI_API_KEY")
-MODEL = os.getenv("MODEL", "gemini-2.5-flash")
-PORT = int(os.getenv("PORT", "8000"))
+from finplan_ml import config
+from finplan_ml.prompts import bank_batch_prompt, user_plan_prompt
+from finplan_ml.registry import get_registry
 
-if not API_KEY:
-    raise RuntimeError("GEMINI_API_KEY missing in .env")
+app = FastAPI(title="FinPlan ML", version="0.2.0")
 
-genai.configure(api_key=API_KEY)
 
-with open("cluster_meta.json","r",encoding="utf-8") as f:
-    CLUSTER_META = json.load(f)
+class CustomerPayload(BaseModel):
+    customer: dict = Field(..., description="Profile keyed by the dataset's column names")
 
-def heuristic_cluster_map(customer: dict) -> int:
-    goal = (customer.get("Primary_Financial_Goal","") or "").lower()
-    nw = float(customer.get("Current_Net_Worth", 0) or 0)
-    age = int(customer.get("Age", 0) or 0)
-    rta = (customer.get("Risk_Taking_Ability","") or "").lower()
-    horizon = (customer.get("Preferred_Investment_Horizon","") or "").lower()
 
-    if "retire" in goal or (nw > 1.5e7 and age >= 35):
-        return 0
-    if "emergency" in goal or nw < 3e5:
-        return 2
-    if age <= 30 and "high" in rta:
-        return 3
-    if age >= 50 or "short" in horizon:
-        return 4
-    return 1
+def _http(exc: Exception) -> HTTPException:
+    """422 for a bad request, 503 for a model that did not load."""
+    status = 422 if isinstance(exc, ValueError) else 503
+    return HTTPException(status_code=status, detail=str(exc))
 
-def cluster_label(cid: int) -> str:
-    return CLUSTER_META["cluster_labels"].get(str(cid), "Unknown")
-
-class Customer(BaseModel):
-    customer: dict
-
-app = FastAPI()
 
 @app.get("/health")
 def health():
-    return {"ok": True}
+    """Report every model's status, so a broken artifact is visible immediately."""
+    return get_registry().health()
+
+
+@app.post("/ml/segment")
+def segment(payload: CustomerPayload):
+    try:
+        return get_registry().segmentation.predict(payload.customer)
+    except (ValueError, RuntimeError) as exc:
+        raise _http(exc) from exc
+
+
+@app.post("/ml/allocate")
+def allocate(payload: CustomerPayload):
+    try:
+        return {"allocation": get_registry().portfolio.allocate(payload.customer)}
+    except (ValueError, RuntimeError) as exc:
+        raise _http(exc) from exc
+
+
+@app.get("/ml/forecast/gold")
+def forecast_gold(limit: int = 60):
+    try:
+        return {"points": get_registry().gold.series(limit=limit)}
+    except RuntimeError as exc:
+        raise _http(exc) from exc
+
 
 @app.get("/plans/generic")
 def plans_generic():
+    genai.configure(api_key=config.require_api_key())
     try:
-        model = genai.GenerativeModel(MODEL)
-        resp = model.generate_content(bank_batch_prompt)
-        return {"ok": True, "text": resp.text}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        model = genai.GenerativeModel(config.GEMINI_MODEL)
+        return {"ok": True, "text": model.generate_content(bank_batch_prompt).text}
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Gemini call failed: {exc}") from exc
+
 
 @app.post("/plans/user")
-def plans_user(payload: Customer):
+def plans_user(payload: CustomerPayload):
+    customer = payload.customer
     try:
-        customer = payload.customer  # Use .customer for Pydantic v2+
-        cid = heuristic_cluster_map(customer)
-        label = cluster_label(cid)
-        prompt = user_plan_prompt(cid, label, customer)
-        model = genai.GenerativeModel(MODEL)
-        resp = model.generate_content(prompt)
-        return {"ok": True, "clusterId": cid, "clusterLabel": label, "text": resp.text}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        segment_result = get_registry().segmentation.predict(customer)
+    except (ValueError, RuntimeError) as exc:
+        raise _http(exc) from exc
+
+    genai.configure(api_key=config.require_api_key())
+    prompt = user_plan_prompt(segment_result["cluster_id"], segment_result["label"], customer)
+    try:
+        model = genai.GenerativeModel(config.GEMINI_MODEL)
+        text = model.generate_content(prompt).text
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Gemini call failed: {exc}") from exc
+
+    return {
+        "ok": True,
+        "clusterId": segment_result["cluster_id"],
+        "clusterLabel": segment_result["label"],
+        "text": text,
+    }
