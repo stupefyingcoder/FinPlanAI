@@ -32,3 +32,7 @@ Thumbs.db
 *.log
 ml/plans/user/*
 !ml/plans/user/.gitkeep
+
+# Local databases
+*.db
+*.sqlite3
