@@ -4,7 +4,7 @@ A GenAI-powered financial planning platform. It builds a profile from a user's n
 
 Built for **Use Case 9 — Finance Planning** by Team AI Mavericks.
 
-> **Status: integration in progress.** The application and the machine-learning work were developed in parallel as separate codebases. This repository is where they are being merged into one product. See [Current state](#current-state) for exactly what is wired up and what is not — nothing below is claimed to work until it says it does.
+> **Status: integration in progress.** The application and the machine-learning work were developed in parallel as separate codebases. This repository is where they are being merged into one product. One FastAPI service now owns authentication, profiles, goals and the trained models; the React dashboard has not yet been rewired to consume the prediction endpoints. See [Current state](#current-state).
 
 ---
 
@@ -12,8 +12,8 @@ Built for **Use Case 9 — Finance Planning** by Team AI Mavericks.
 
 | Capability | How |
 |---|---|
-| Investor segmentation | K-Means (k=5) over synthetic investor profiles, silhouette 0.63 |
-| Portfolio allocation | Neural network with a softmax head — 11 features → 5 asset classes summing to 1.0 |
+| Investor segmentation | K-Means (k=5) over synthetic investor profiles, silhouette 0.42 |
+| Portfolio allocation | Neural network with a softmax head — 37 features to 5 asset classes summing to 1.0 |
 | Gold price forecasting | Prophet, driver-based: forecasts USD gold, USD/INR and inflation, then feeds them into the main model |
 | Conversational planning | Four Gemini agents — Risk, Goal, Synthesis, History — coordinated by an orchestrator |
 | Grounded answers | RAG over a FAISS index of KYC, loan and insurance documents via LangChain |
@@ -23,10 +23,24 @@ Built for **Use Case 9 — Finance Planning** by Team AI Mavericks.
 ```
 Tier 1  Presentation    React 19 + Tailwind (:3001)
 Tier 1b AI surface      Streamlit planner, embedded (:8501)
-Tier 2  Application     FastAPI (:8000) — auth, profile, goals, /ml/*, /ai/*
+Tier 2  Application     FastAPI (:8000) — auth, profile, goals, /api/ml/*, /api/ai/*
 Tier 3  Intelligence    ml/ imported as a package: agents, RAG, model registry
-Tier 4  Persistence     MySQL 8 (SQLite fallback for zero-setup demo)
+Tier 4  Persistence     SQLite by default, MySQL via DATABASE_URL
 ```
+
+### API
+
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/auth/signup` `/auth/login` `/auth/refresh` `/auth/logout` | JWT access token plus a rotating httpOnly refresh cookie |
+| GET | `/api/me` | Current account |
+| GET, POST | `/api/profile` | Financial profile |
+| GET, POST, PATCH, DELETE | `/api/goals` | Financial goals |
+| GET | `/api/ml/segment` `/api/ml/allocation` `/api/ml/forecast/gold` | Model predictions for the signed-in user |
+| POST | `/api/ai/plan` | Segment, allocation and a written plan |
+| GET | `/health` `/api/ml/health` | Liveness and per-model status |
+
+Interactive docs at `http://localhost:8000/docs`.
 
 The models are served by the API, not by Streamlit. The Streamlit planner is a client of those
 endpoints, so the React dashboard renders real predictions independently of it.
@@ -34,12 +48,16 @@ endpoints, so the React dashboard renders real predictions independently of it.
 ## Repository layout
 
 ```
+backend/                 FastAPI — auth, profile, goals, ML and AI routers
+  app/routers/           auth, profile, goals, ml, ai
+  app/services/          profile to model-feature mapping
+  alembic/versions/      migrations
 frontend/                React dashboard — home, auth, profile setup, six tabs
-ml/                      GenAI + ML: agents, RAG pipeline, FAISS index, trained models
-  data/                  5,000-row synthetic dataset, sample customer & policy documents
-  data/model data/       K-Means, portfolio net, Prophet artifacts
-  rag_system/            Retrieval pipeline, vector store, document ingestion
-legacy/express-backend/  Original Express + MySQL API — being ported to FastAPI, then removed
+ml/                      GenAI + ML, importable as the finplan_ml package
+  finplan_ml/            config, registry, models, agents
+  artifacts/             trained K-Means, portfolio net, Prophet outputs
+  training/              the scripts that produce those artifacts
+  data/                  5,000-row synthetic dataset, sample customer and policy documents
 docs/                    Project deck and codebase documentation
 ```
 
@@ -47,27 +65,32 @@ docs/                    Project deck and codebase documentation
 
 | Component | State |
 |---|---|
-| React dashboard | Imported, runs against the Express API |
-| Express API (auth, profile, me) | Imported, working — **scheduled for replacement** |
-| K-Means, Prophet, RAG, FAISS, agents | Imported and trained — **not yet exposed over HTTP** |
-| Portfolio model | Artifact present but **not loadable** — see below |
-| FastAPI backend | Not started |
+| FastAPI backend | Auth, profile, goals, ML and AI routes; 15 integration tests |
+| Segmentation, allocation, gold forecast | Trained, registered and served over HTTP |
+| Alembic migrations | Initial migration creates all four tables |
+| React dashboard | Runs; the API base is now configurable, but the tabs do not yet call the prediction endpoints |
+| Express backend | **Removed** — fully replaced by FastAPI |
+| RAG, agents, Streamlit planner | Packaged and importable; not yet embedded in the dashboard |
 | Docker | Not started |
 
-### Known issues being worked through
+### Model results
 
-1. **`full_portfolio_model.pth` cannot be loaded.** It was saved with `torch.save(model)` as a
-   pickled `RobustPortfolioNN` instance, but that class definition is not in the repository, so
-   `torch.load` raises `AttributeError`. It is being retrained from the 5,000-row dataset and
-   re-saved as a `state_dict`.
-2. **Clustering uses 2 of 39 features** (net worth, primary goal). Being refit on the profile
-   fields the application actually collects.
-3. **`ml/` is not yet importable** — flat imports mean modules only resolve when run from their own
-   directory. Being packaged.
-4. **`ml/requirements.txt` is incomplete** — `langgraph`, `langchain-huggingface` and `pdfplumber`
-   are imported but unlisted; `fastapi` and `uvicorn` are commented out.
-5. **Four Streamlit entry points exist.** One will be promoted to the embedded AI tab; the rest
-   will be deleted.
+| Model | Result |
+|---|---|
+| Portfolio allocation | 2.77pp mean absolute error on a held-out split, against 6.15pp for a predict-the-average baseline — a 55% improvement. Outputs always sum to 1.0. |
+| Investor segmentation | k=5, silhouette 0.42. Scores for k=3 to 8 are recorded in `ml/artifacts/customer_clustering_meta.json`. |
+| Gold forecast | Prophet, 237 monthly points to 2030 with an uncertainty band. |
+
+Both models were retrained here because the inherited checkpoints could not be loaded: one pickled
+a class that was never committed, the other was written by an incompatible scikit-learn. The
+training scripts are in `ml/training/`.
+
+### Still to do
+
+1. The dashboard tabs do not yet render predictions; they show placeholder data.
+2. The Streamlit planner is not embedded in the dashboard.
+3. No Docker setup yet.
+4. `google-generativeai` is deprecated upstream; the agent code should move to `google-genai`.
 
 ## Data
 
@@ -80,11 +103,34 @@ personas, not real people.
 
 ## Getting started
 
-Setup instructions will land with the FastAPI backend and Docker Compose. Until then, see
-`docs/CODEBASE_DOCUMENTATION.md` for how to run the frontend and the Express API separately.
+No database required — the backend defaults to SQLite.
 
-Copy `.env.example` to `.env` in `frontend/`, `ml/` and `legacy/express-backend/` and fill in your
-own values. **Never commit a `.env`.**
+```bash
+# 1. Python environment (backend and ML share one)
+python -m venv ml/.venv
+ml/.venv/Scripts/python -m pip install -r ml/requirements.txt -r backend/requirements.txt
+
+# 2. Database
+cd backend
+../ml/.venv/Scripts/python -m alembic upgrade head
+
+# 3. API  ->  http://localhost:8000/docs
+../ml/.venv/Scripts/python -m uvicorn app.main:app --reload --port 8000
+
+# 4. Frontend  ->  http://localhost:3001
+cd ../frontend && npm install && npm start
+```
+
+Tests:
+
+```bash
+cd backend && ../ml/.venv/Scripts/python -m pytest tests -q   # 15 API tests
+cd ../ml   && .venv/Scripts/python -m pytest tests -q         # 9 model tests
+```
+
+Copy `.env.example` to `.env` in `backend/`, `frontend/` and `ml/` and fill in your own values.
+A Gemini key is needed only for the written narrative — every model prediction works without one.
+**Never commit a `.env`.**
 
 ## Team
 
