@@ -1,0 +1,25 @@
+{
+    "model_file": "customer_clustering_k5.pkl",
+    "features_numeric": [
+        "Current_Net_Worth"
+    ],
+    "features_categorical": [
+        "Primary_Financial_Goal"
+    ],
+    "n_clusters": 5,
+    "silhouette_score": 0.630276427259958,
+    "cluster_counts": {
+        "1": 2000,
+        "4": 1403,
+        "3": 880,
+        "2": 491,
+        "0": 226
+    },
+    "cluster_labels": {
+        "0": "High NW \u2022 Long-Term Retirement",
+        "1": "Mid NW \u2022 Short-Term Aspirers",
+        "2": "Low NW \u2022 Emergency/Liquidity",
+        "3": "Young \u2022 Aggressive Growth",
+        "4": "Older \u2022 Conservative Investors"
+    }
+}

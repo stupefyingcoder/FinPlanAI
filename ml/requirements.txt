@@ -1,0 +1,42 @@
+# Core dependencies
+streamlit>=1.28.0
+python-dotenv>=1.0.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Prophet for forecasting
+prophet>=1.1.5
+
+# AI/ML dependencies
+google-generativeai>=0.7.0
+pydantic>=2.6.0
+
+# For PyTorch model loading
+torch>=2.0.0
+
+# LangChain ecosystem
+langchain>=0.2.0
+langchain-community>=0.2.0
+langchain-google-genai>=2.0.0
+
+# Vector store
+faiss-cpu>=1.7.0
+
+# Document processing
+PyPDF2>=3.0.0
+
+# Matplotlib for plotting
+matplotlib>=3.7.0
+
+# Additional utilities
+plotly>=5.0.0
+tiktoken>=0.5.0
+
+# Optional: For advanced features
+# fastapi>=0.111.0
+# uvicorn[standard]>=0.30.0
+
+# Development dependencies (optional)
+# pytest>=7.0.0
+# black>=23.0.0
+# flake8>=6.0.0
