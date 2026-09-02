@@ -4,7 +4,7 @@ A GenAI-powered financial planning platform. It builds a profile from a user's n
 
 Built for **Use Case 9 — Finance Planning** by Team AI Mavericks.
 
-> **Status: integration in progress.** The application and the machine-learning work were developed in parallel as separate codebases. This repository is where they are being merged into one product. One FastAPI service now owns authentication, profiles, goals and the trained models; the React dashboard has not yet been rewired to consume the prediction endpoints. See [Current state](#current-state).
+> **Status: integration complete, packaging in progress.** The application and the machine-learning work were developed in parallel as separate codebases. This repository is where they were merged. A signed-in user now gets a segment, an allocation and a written plan produced by the trained models from their own profile, rendered in the dashboard. What remains is Docker, a seeded demo and CI. See [Current state](#current-state).
 
 ---
 
@@ -38,6 +38,7 @@ Tier 4  Persistence     SQLite by default, MySQL via DATABASE_URL
 | GET, POST, PATCH, DELETE | `/api/goals` | Financial goals |
 | GET | `/api/ml/segment` `/api/ml/allocation` `/api/ml/forecast/gold` | Model predictions for the signed-in user |
 | POST | `/api/ai/plan` | Segment, allocation and a written plan |
+| POST/GET | `/api/session/streamlit-token` `/api/session/exchange` | Short-lived signed hand-off to the embedded planner |
 | GET | `/health` `/api/ml/health` | Liveness and per-model status |
 
 Interactive docs at `http://localhost:8000/docs`.
@@ -65,13 +66,18 @@ docs/                    Project deck and codebase documentation
 
 | Component | State |
 |---|---|
-| FastAPI backend | Auth, profile, goals, ML and AI routes; 15 integration tests |
+| FastAPI backend | Auth, profile, goals, ML, AI and session routes; 20 integration tests |
 | Segmentation, allocation, gold forecast | Trained, registered and served over HTTP |
 | Alembic migrations | Initial migration creates all four tables |
-| React dashboard | Runs; the API base is now configurable, but the tabs do not yet call the prediction endpoints |
+| Results tab | Renders the model's allocation and the user's segment |
+| Market Analysis tab | Renders the Prophet forecast with its uncertainty band |
+| Financial Goals tab | Real CRUD against `financial_goals` |
+| AI Insights tab | Plan summary rendered natively, planner embedded via a signed session token |
 | Express backend | **Removed** — fully replaced by FastAPI |
-| RAG, agents, Streamlit planner | Packaged and importable; not yet embedded in the dashboard |
-| Docker | Not started |
+| Docker, seed data, CI | Not started |
+
+Market indices, stock and currency figures on the Market Analysis tab remain illustrative
+sample data — there is no live market feed connected, and the UI says so.
 
 ### Model results
 
@@ -87,9 +93,9 @@ training scripts are in `ml/training/`.
 
 ### Still to do
 
-1. The dashboard tabs do not yet render predictions; they show placeholder data.
-2. The Streamlit planner is not embedded in the dashboard.
-3. No Docker setup yet.
+1. No Docker setup yet — `docker compose up` is the next milestone.
+2. No seeded demo account, so a reviewer has to sign up to see the dashboard populated.
+3. No CI workflow running the two test suites.
 4. `google-generativeai` is deprecated upstream; the agent code should move to `google-genai`.
 
 ## Data
@@ -121,10 +127,16 @@ cd backend
 cd ../frontend && npm install && npm start
 ```
 
+Optionally, the embedded planner for the AI Insights tab:
+
+```bash
+cd ml && .venv/Scripts/python -m streamlit run streamlit_app.py   # -> :8501
+```
+
 Tests:
 
 ```bash
-cd backend && ../ml/.venv/Scripts/python -m pytest tests -q   # 15 API tests
+cd backend && ../ml/.venv/Scripts/python -m pytest tests -q   # 20 API tests
 cd ../ml   && .venv/Scripts/python -m pytest tests -q         # 9 model tests
 ```
 
