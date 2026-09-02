@@ -27,6 +27,7 @@ import {
 } from "../Data/Data"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../auth/AuthProvider"
+import { apiUrl } from "../api/config";
 
 const CURRENT_YEAR = new Date().getFullYear()
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n))
@@ -577,7 +578,7 @@ export default function ProfileCreation({ onSave = (payload) => console.log("Fin
     try {
       let accessToken = localStorage.getItem("accessToken")
       if (!accessToken) {
-        const refreshRes = await fetch("http://localhost:5000/auth/refresh", { method: "POST", credentials: "include" })
+        const refreshRes = await fetch(apiUrl("/auth/refresh"), { method: "POST", credentials: "include" })
         if (refreshRes.ok) {
           const refreshBody = await refreshRes.json().catch(() => ({}))
           if (refreshBody.accessToken) {
@@ -588,9 +589,9 @@ export default function ProfileCreation({ onSave = (payload) => console.log("Fin
       }
 
       console.log("[v1] Sending profile data to backend...")
-      console.log("[v1] Request URL:", "http://localhost:5000/api/profile")
+      console.log("[v1] Request URL:", apiUrl("/api/profile"))
 
-      let response = await fetch("http://localhost:5000/api/profile", {
+      let response = await fetch(apiUrl("/api/profile"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -603,7 +604,7 @@ export default function ProfileCreation({ onSave = (payload) => console.log("Fin
       console.log("[v1] Response status:", response.status)
 
       if (response.status === 401) {
-        const refreshRes2 = await fetch("http://localhost:5000/auth/refresh", {
+        const refreshRes2 = await fetch(apiUrl("/auth/refresh"), {
           method: "POST",
           credentials: "include",
         })
@@ -612,7 +613,7 @@ export default function ProfileCreation({ onSave = (payload) => console.log("Fin
           if (r2.accessToken) {
             accessToken = r2.accessToken
             localStorage.setItem("accessToken", accessToken)
-            response = await fetch("http://localhost:5000/api/profile", {
+            response = await fetch(apiUrl("/api/profile"), {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",

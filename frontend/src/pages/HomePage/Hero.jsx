@@ -1,4 +1,5 @@
 // import React from "react";
+import { apiUrl } from "../../api/config";
 // import { Link } from "react-router-dom";
 
 // /**
@@ -11,22 +12,22 @@
 // async function handleLetsStart() {
 //   try {
 //     // try refresh first to get an access token if needed
-//     await fetch("http://localhost:5000/auth/refresh", { method: "POST", credentials: "include"});
+//     await fetch(apiUrl("/auth/refresh"), { method: "POST", credentials: "include"});
 
 //     // call /api/me with latest access token
 //     const accessToken = localStorage.getItem("accessToken");
-//     const res = await fetch("http://localhost:5000/api/me", {
+//     const res = await fetch(apiUrl("/api/me"), {
 //       headers: { Authorization: `Bearer ${accessToken}` },
 //       credentials: "include"
 //     });
 //     if (res.status === 401) {
 //       // try refresh flow if access token expired
-//       const refreshRes = await fetch("http://localhost:5000/auth/refresh", { method: "POST", credentials: "include" });
+//       const refreshRes = await fetch(apiUrl("/auth/refresh"), { method: "POST", credentials: "include" });
 //       const refreshBody = await refreshRes.json();
 //       if (refreshRes.ok && refreshBody.accessToken) {
 //         localStorage.setItem("accessToken", refreshBody.accessToken);
 //         // retry /api/me
-//         const retry = await fetch("http://localhost:5000/api/me", {
+//         const retry = await fetch(apiUrl("/api/me"), {
 //           headers: { Authorization: `Bearer ${refreshBody.accessToken}` },
 //           credentials: "include"
 //         });
@@ -159,14 +160,14 @@ const Hero = ({ model, logos = [] }) => {
     setLoading(true);
     try {
       // Try refresh (cookie-based)
-      await fetch("http://localhost:5000/auth/refresh", {
+      await fetch(apiUrl("/auth/refresh"), {
         method: "POST",
         credentials: "include",
       });
 
       // Use saved access token if present
       let accessToken = localStorage.getItem("accessToken") || "";
-      let meRes = await fetch("http://localhost:5000/api/me", {
+      let meRes = await fetch(apiUrl("/api/me"), {
         method: "GET",
         credentials: "include",
         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
@@ -174,7 +175,7 @@ const Hero = ({ model, logos = [] }) => {
 
       // If unauthorized, try refresh again and retry
       if (meRes.status === 401) {
-        const refreshRes = await fetch("http://localhost:5000/auth/refresh", {
+        const refreshRes = await fetch(apiUrl("/auth/refresh"), {
           method: "POST",
           credentials: "include",
         });
@@ -183,7 +184,7 @@ const Hero = ({ model, logos = [] }) => {
           if (refreshBody.accessToken) {
             localStorage.setItem("accessToken", refreshBody.accessToken);
             accessToken = refreshBody.accessToken;
-            meRes = await fetch("http://localhost:5000/api/me", {
+            meRes = await fetch(apiUrl("/api/me"), {
               method: "GET",
               credentials: "include",
               headers: { Authorization: `Bearer ${accessToken}` },

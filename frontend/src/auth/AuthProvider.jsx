@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { apiUrl } from "../api/config";
 
 const AuthContext = createContext();
 
@@ -23,14 +24,14 @@ export function AuthProvider({ children }) {
     (async () => {
       try {
         // Attempt refresh (server will read httpOnly cookie)
-        await fetch("http://localhost:5000/auth/refresh", {
+        await fetch(apiUrl("/auth/refresh"), {
           method: "POST",
           credentials: "include",
         });
 
         // Try to fetch /api/me using any stored access token
         const storedToken = localStorage.getItem("accessToken") || "";
-        const meRes = await fetch("http://localhost:5000/api/me", {
+        const meRes = await fetch(apiUrl("/api/me"), {
           method: "GET",
           credentials: "include",
           headers: storedToken ? { Authorization: `Bearer ${storedToken}` } : {},
@@ -79,7 +80,7 @@ export function AuthProvider({ children }) {
   // logout helper — revokes on server and clears local state
   const logout = async () => {
     try {
-      await fetch("http://localhost:5000/auth/logout", {
+      await fetch(apiUrl("/auth/logout"), {
         method: "POST",
         credentials: "include",
       });

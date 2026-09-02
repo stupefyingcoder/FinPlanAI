@@ -1,4 +1,5 @@
 // import React, { useState } from "react";
+import { apiUrl } from "../../api/config";
 // import { Link, useLocation, useNavigate } from "react-router-dom";
 // import { FiMenu, FiSearch, FiBell } from "react-icons/fi";
 // import { useAuth } from "../../auth/AuthProvider";
@@ -28,7 +29,7 @@
 //     e?.preventDefault?.();
 //     setLoading(true);
 //     try {
-//       const refreshRes = await fetch("http://localhost:5000/auth/refresh", {
+//       const refreshRes = await fetch(apiUrl("/auth/refresh"), {
 //         method: "POST",
 //         credentials: "include",
 //       });
@@ -40,7 +41,7 @@
 //       }
 
 //       const accessToken = localStorage.getItem("accessToken") || "";
-//       const meRes = await fetch("http://localhost:5000/api/me", {
+//       const meRes = await fetch(apiUrl("/api/me"), {
 //         method: "GET",
 //         credentials: "include",
 //         headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
@@ -251,7 +252,7 @@ const Header = ({ logo }) => {
     setLoading(true);
     try {
       const refreshRes = await fetch(
-        "http://localhost:5000/auth/refresh",
+        apiUrl("/auth/refresh"),
         {
           method: "POST",
           credentials: "include",
@@ -267,7 +268,7 @@ const Header = ({ logo }) => {
       const accessToken =
         localStorage.getItem("accessToken") || "";
       const meRes = await fetch(
-        "http://localhost:5000/api/me",
+        apiUrl("/api/me"),
         {
           method: "GET",
           credentials: "include",

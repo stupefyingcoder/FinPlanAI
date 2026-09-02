@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginImg from "../assets/LoginBg.png";
 import { useAuth } from "../auth/AuthProvider";
+import { apiUrl } from "../api/config";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ export default function LoginPage() {
     try {
       if (isSignUp) {
         // --- SIGNUP ---
-        const res = await fetch("http://localhost:5000/auth/signup", {
+        const res = await fetch(apiUrl("/auth/signup"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -61,7 +62,7 @@ export default function LoginPage() {
         return;
       } else {
         // --- LOGIN ---
-        const res = await fetch("http://localhost:5000/auth/login", {
+        const res = await fetch(apiUrl("/auth/login"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
