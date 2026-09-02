@@ -22,6 +22,7 @@ from finplan_ml.schemas import NewCustomerProfile, DBCustomerProfile
 from finplan_ml.planning import generate_plan_texts
 from finplan_ml.prompts import extract_profile_from_pdf_prompt
 from finplan_ml.agents.system import FinancialPlanningAgent, create_enhanced_agent, AgentState
+from finplan_ml.session import load_session_profile
 from finplan_ml import config
 
 
@@ -43,7 +44,17 @@ CHUNK_SIZE = 900
 CHUNK_OVERLAP = 150
 
 st.set_page_config(page_title="AI Financial Planning Agent", layout="wide")
-st.title("🤖 Intelligent Financial Planning Assistant")
+
+# When embedded in the dashboard, ?session= carries a short-lived signed token
+# identifying the viewer. Standalone use is unaffected: this returns None.
+if "dashboard_session" not in st.session_state:
+    st.session_state.dashboard_session = load_session_profile()
+
+_session = st.session_state.dashboard_session
+if _session:
+    st.caption(f"Planning for {_session['fullName']} · profile loaded from your dashboard")
+else:
+    st.title("🤖 Intelligent Financial Planning Assistant")
 
 # Sidebar for agent configuration
 with st.sidebar:

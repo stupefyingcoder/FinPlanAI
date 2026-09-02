@@ -28,6 +28,9 @@ faiss-cpu>=1.8
 # Documents
 PyPDF2>=3.0
 
+# Session hand-off from the dashboard when embedded
+requests>=2.31
+
 # UI
 streamlit>=1.36
 matplotlib>=3.8
