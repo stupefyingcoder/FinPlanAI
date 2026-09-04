@@ -4,7 +4,17 @@ A GenAI-powered financial planning platform. It builds a profile from a user's n
 
 Built for **Use Case 9 — Finance Planning** by Team AI Mavericks.
 
-> **Status: integration complete, packaging in progress.** The application and the machine-learning work were developed in parallel as separate codebases. This repository is where they were merged. A signed-in user now gets a segment, an allocation and a written plan produced by the trained models from their own profile, rendered in the dashboard. What remains is Docker, a seeded demo and CI. See [Current state](#current-state).
+[![CI](https://github.com/stupefyingcoder/FinPlanAI/actions/workflows/ci.yml/badge.svg?branch=phase-2-fastapi-backend)](https://github.com/stupefyingcoder/FinPlanAI/actions/workflows/ci.yml)
+
+> The application and the machine-learning work were built as separate codebases; this repository is where they were merged into one product. A signed-in user gets an investor segment, a portfolio allocation and a written plan produced by trained models from their own profile.
+
+```bash
+docker compose up --build
+# dashboard  http://localhost:3000   sign in: demo@finplan.ai / demo1234
+# API docs   http://localhost:8000/docs
+```
+
+No database to install, no API key required. The demo account comes with a profile and three goals already filled in.
 
 ---
 
@@ -66,15 +76,16 @@ docs/                    Project deck and codebase documentation
 
 | Component | State |
 |---|---|
-| FastAPI backend | Auth, profile, goals, ML, AI and session routes; 20 integration tests |
+| FastAPI backend | Auth, profile, goals, ML, AI and session routes; 26 integration tests |
 | Segmentation, allocation, gold forecast | Trained, registered and served over HTTP |
 | Alembic migrations | Initial migration creates all four tables |
 | Results tab | Renders the model's allocation and the user's segment |
 | Market Analysis tab | Renders the Prophet forecast with its uncertainty band |
 | Financial Goals tab | Real CRUD against `financial_goals` |
 | AI Insights tab | Plan summary rendered natively, planner embedded via a signed session token |
+| Docker | `docker compose up` runs MySQL, API, planner and dashboard |
+| CI | GitHub Actions runs both test suites, the frontend build and the image build |
 | Express backend | **Removed** — fully replaced by FastAPI |
-| Docker, seed data, CI | Not started |
 
 Market indices, stock and currency figures on the Market Analysis tab remain illustrative
 sample data — there is no live market feed connected, and the UI says so.
@@ -83,9 +94,12 @@ sample data — there is no live market feed connected, and the UI says so.
 
 | Model | Result |
 |---|---|
-| Portfolio allocation | 2.77pp mean absolute error on a held-out split, against 6.15pp for a predict-the-average baseline — a 55% improvement. Outputs always sum to 1.0. |
-| Investor segmentation | k=5, silhouette 0.42. Scores for k=3 to 8 are recorded in `ml/artifacts/customer_clustering_meta.json`. |
-| Gold forecast | Prophet, 237 monthly points to 2030 with an uncertainty band. |
+| Portfolio allocation | **2.77pp** mean absolute error on a held-out split, against **6.15pp** for a predict-the-average baseline — a 55% improvement. Outputs always sum to 1.0. |
+| Investor segmentation | k=5, silhouette **0.42**. Scores for k=3 to 8 are recorded in the metadata; k=7 scores higher and k=5 is a stated trade-off for interpretability. |
+| Gold forecast | Prophet with external regressors, 237 monthly points to 2030 with an uncertainty band. |
+
+Full methodology, per-class errors, behavioural checks and known limitations:
+**[docs/MODEL_CARD.md](docs/MODEL_CARD.md)**.
 
 Both models were retrained here because the inherited checkpoints could not be loaded: one pickled
 a class that was never committed, the other was written by an incompatible scikit-learn. The
@@ -93,10 +107,9 @@ training scripts are in `ml/training/`.
 
 ### Still to do
 
-1. No Docker setup yet — `docker compose up` is the next milestone.
-2. No seeded demo account, so a reviewer has to sign up to see the dashboard populated.
-3. No CI workflow running the two test suites.
-4. `google-generativeai` is deprecated upstream; the agent code should move to `google-genai`.
+1. `google-generativeai` is deprecated upstream; the agent code should move to `google-genai`.
+2. No live market data — the non-gold figures on Market Analysis are sample data.
+3. The RAG document corpus is small (72 vectors over the sample policy documents).
 
 ## Data
 
@@ -108,6 +121,19 @@ higher savings, and so on). The customer documents under `ml/data/` are likewise
 personas, not real people.
 
 ## Getting started
+
+### With Docker (recommended)
+
+```bash
+docker compose up --build
+```
+
+Four services: MySQL, the FastAPI backend, the Streamlit planner and the dashboard behind nginx.
+Migrations and the demo seed run automatically on first boot. Add a `GEMINI_API_KEY` to the
+environment for LLM-written plans; without one the narrative is generated locally and every model
+prediction is unaffected.
+
+### Without Docker
 
 No database required — the backend defaults to SQLite.
 
@@ -138,6 +164,12 @@ Tests:
 ```bash
 cd backend && ../ml/.venv/Scripts/python -m pytest tests -q   # 20 API tests
 cd ../ml   && .venv/Scripts/python -m pytest tests -q         # 9 model tests
+```
+
+Seed the demo account (optional, but it saves filling in the profile form):
+
+```bash
+cd backend && ../ml/.venv/Scripts/python -m app.seed
 ```
 
 Copy `.env.example` to `.env` in `backend/`, `frontend/` and `ml/` and fill in your own values.
