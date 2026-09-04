@@ -39,6 +39,8 @@ CLUSTER_MODEL_LEGACY = ARTIFACTS_DIR / "customer_clustering_k5.pkl"
 CLUSTER_MODEL_META = ARTIFACTS_DIR / "customer_clustering_meta.json"
 
 # Retrained portfolio network, saved as a state_dict (see training/).
+# Serving reads the NumPy export; the .pt is kept for training and provenance.
+PORTFOLIO_WEIGHTS = ARTIFACTS_DIR / "portfolio_model.npz"
 PORTFOLIO_MODEL = ARTIFACTS_DIR / "portfolio_model.pt"
 PORTFOLIO_MODEL_META = ARTIFACTS_DIR / "portfolio_model_meta.json"
 # The original pickled-module checkpoint. Kept for provenance only: its class

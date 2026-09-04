@@ -77,7 +77,8 @@ customer profile.
 | Optimiser | AdamW, lr 2e-3, weight decay 1e-4, cosine schedule, early stopping |
 | Split | 70 / 15 / 15, seed 42, scaler fitted on the training split only |
 | Outputs | `RealEstate`, `Equity`, `Debt`, `Cash`, `Gold` — always sum to 1.0 |
-| Artifact | `ml/artifacts/portfolio_model.pt` (`state_dict`) + `portfolio_model_meta.json` |
+| Artifact | `ml/artifacts/portfolio_model.pt` (`state_dict`) for training, `portfolio_model.npz` for serving, + `portfolio_model_meta.json` |
+| Serving | Pure NumPy. The network is 4,677 parameters; PyTorch is a 536 MB dependency to evaluate three matrix multiplies, and its absence is what makes free-tier hosting possible. A test asserts the two paths agree to 1e-5. |
 
 **Held-out performance.** Errors are in percentage points of allocation.
 

@@ -1,4 +1,7 @@
-# FinPlan ML — pinned to what is actually imported.
+# FinPlan ML — training and development.
+#
+# For serving, use requirements-serve.txt: it omits torch, which is needed only
+# to train. Inference runs in NumPy from the exported .npz weights.
 # The previous file omitted langgraph, langchain-huggingface and pdfplumber
 # (imported but unlisted) and had fastapi/uvicorn commented out, so a clean
 # install could not run the API.

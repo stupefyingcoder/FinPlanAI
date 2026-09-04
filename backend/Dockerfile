@@ -13,13 +13,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         curl libgomp1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Requirements first so a code change does not reinstall torch.
-COPY ml/requirements.txt /app/ml/requirements.txt
+# Requirements first so a code change does not reinstall the dependency tree.
+COPY ml/requirements-serve.txt /app/ml/requirements-serve.txt
 COPY backend/requirements.txt /app/backend/requirements.txt
 
-# CPU-only torch: the GPU build is several gigabytes and nothing here needs it.
-RUN pip install --index-url https://download.pytorch.org/whl/cpu torch \
-    && pip install -r /app/ml/requirements.txt -r /app/backend/requirements.txt
+# No PyTorch. The allocation network is 4,677 parameters and is evaluated in
+# NumPy from the exported .npz weights, so the image does not carry a 536 MB
+# framework to do three matrix multiplies — which is what keeps an image under
+# the size limits of most free hosting tiers. Training uses ml/requirements.txt,
+# outside the image entirely.
+RUN pip install -r /app/ml/requirements-serve.txt -r /app/backend/requirements.txt
 
 COPY ml /app/ml
 COPY backend /app/backend

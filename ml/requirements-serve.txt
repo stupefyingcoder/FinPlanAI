@@ -1,0 +1,29 @@
+# Runtime dependencies for serving. Deliberately excludes PyTorch.
+#
+# The allocation network is 4,677 parameters; it is evaluated in NumPy from
+# artifacts/portfolio_model.npz. Installing a 536 MB framework to do three matrix
+# multiplies is what pushes an image past most free hosting tiers — which is the
+# usual reason a project like this runs locally and never gets a live link.
+#
+# Training still needs torch: see requirements.txt.
+
+# Core
+numpy>=1.26,<2.3
+pandas>=2.2
+python-dotenv>=1.0
+pydantic>=2.6
+
+# Segmentation pipeline (scikit-learn is ~30 MB, not 536)
+scikit-learn>=1.5
+joblib>=1.4
+
+# GenAI + RAG
+google-generativeai>=0.7
+langchain>=0.2
+langchain-community>=0.2
+langchain-google-genai>=2.0
+langchain-text-splitters>=0.2
+faiss-cpu>=1.8
+
+# Documents
+PyPDF2>=3.0

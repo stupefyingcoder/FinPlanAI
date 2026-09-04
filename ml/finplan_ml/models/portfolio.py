@@ -26,17 +26,9 @@ from typing import Sequence
 import torch
 import torch.nn as nn
 
-# The five asset classes we allocate across, in fixed order.
-ASSET_CLASSES: tuple[str, ...] = ("RealEstate", "Equity", "Debt", "Cash", "Gold")
-
-# Source columns for those classes in the synthetic dataset.
-TARGET_COLUMNS: tuple[str, ...] = (
-    "RealEstate_%",
-    "Equity_%",
-    "Debt_%",
-    "Cash_%",
-    "Gold_%",
-)
+# Defined without torch so the serving path can read them; re-exported here
+# because this is where a reader looks for them.
+from finplan_ml.models.asset_classes import ASSET_CLASSES, TARGET_COLUMNS  # noqa: F401
 
 
 class PortfolioAllocationNet(nn.Module):

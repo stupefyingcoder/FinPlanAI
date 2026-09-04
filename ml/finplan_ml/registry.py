@@ -89,22 +89,21 @@ class PortfolioModel:
         self.status = self._load()
 
     def _load(self) -> ComponentStatus:
-        if not (config.PORTFOLIO_MODEL.exists() and config.PORTFOLIO_MODEL_META.exists()):
+        if not (config.PORTFOLIO_WEIGHTS.exists() and config.PORTFOLIO_MODEL_META.exists()):
             return ComponentStatus(
                 "portfolio", False,
-                f"{config.PORTFOLIO_MODEL.name} not found — run `python -m training.train_portfolio`",
+                f"{config.PORTFOLIO_WEIGHTS.name} not found — run `python -m training.train_portfolio`",
             )
         try:
-            import torch
-
+            # NumPy, not torch. The network is 4,677 parameters; importing a
+            # 536 MB framework to evaluate it is what keeps projects like this off
+            # free hosting tiers. Training still uses torch; serving does not.
             from finplan_ml.models.features import FeatureScaler
-            from finplan_ml.models.portfolio import PortfolioAllocationNet
+            from finplan_ml.models.portfolio_numpy import NumpyPortfolioNet
 
             self.meta = json.loads(config.PORTFOLIO_MODEL_META.read_text(encoding="utf-8"))
             self.scaler = FeatureScaler.from_dict(self.meta["scaler"])
-            self.model = PortfolioAllocationNet(n_features=int(self.meta["n_features"]))
-            self.model.load_state_dict(torch.load(config.PORTFOLIO_MODEL, map_location="cpu"))
-            self.model.eval()
+            self.model = NumpyPortfolioNet.load(config.PORTFOLIO_WEIGHTS)
             mae = self.meta.get("metrics", {}).get("test", {}).get("mae_pp_overall")
             return ComponentStatus(
                 "portfolio", True,
@@ -122,8 +121,6 @@ class PortfolioModel:
         """
         if not self.status.available:
             raise RuntimeError(f"portfolio model unavailable: {self.status.detail}")
-        import torch
-
         from finplan_ml.models.features import build_features, out_of_range_fields, profile_to_frame
 
         problems = out_of_range_fields(profile, self.scaler)
@@ -132,7 +129,7 @@ class PortfolioModel:
 
         frame = profile_to_frame(profile)
         matrix, _ = build_features(frame, scaler=self.scaler)
-        weights = self.model.allocate(torch.from_numpy(matrix)).numpy()[0]
+        weights = self.model.allocate(matrix)[0]
         return {c: float(w) for c, w in zip(self.meta["asset_classes"], weights)}
 
 

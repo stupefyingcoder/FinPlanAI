@@ -31,6 +31,7 @@ from finplan_ml.models.features import (  # noqa: E402
     build_features,
     feature_names,
 )
+from finplan_ml.models.portfolio_numpy import export_state_dict  # noqa: E402
 from finplan_ml.models.portfolio import (  # noqa: E402
     ASSET_CLASSES,
     TARGET_COLUMNS,
@@ -157,6 +158,9 @@ def main() -> int:
 
     config.ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
     torch.save(model.state_dict(), config.PORTFOLIO_MODEL)
+    # Serving runs on NumPy, so export the same weights in a form that needs
+    # no framework: 4,677 parameters should not require a 536 MB dependency.
+    export_state_dict(model.state_dict(), config.PORTFOLIO_WEIGHTS)
     meta = {
         "architecture": "PortfolioAllocationNet",
         "module": "finplan_ml.models.portfolio",

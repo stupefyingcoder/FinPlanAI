@@ -49,6 +49,50 @@ jobs:
           python -m alembic upgrade head
           python -m app.seed
 
+  serving-without-torch:
+    name: Serving works without PyTorch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install serving dependencies only
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ml/requirements-serve.txt -r backend/requirements.txt
+
+      - name: Assert torch is genuinely absent
+        run: |
+          python -c "
+          import importlib.util, sys
+          if importlib.util.find_spec('torch'):
+              sys.exit('torch is installed in the serving environment')
+          print('torch not installed, as intended')"
+
+      - name: Predict an allocation anyway
+        working-directory: ml
+        run: |
+          python -c "
+          import sys
+          sys.path.insert(0, '.')
+          from finplan_ml.registry import get_registry
+          allocation = get_registry().portfolio.allocate({
+              'Age': 34, 'Annual_Income': 1440000, 'Monthly_Expenses': 52000,
+              'Savings_Rate(%)': 27.5, 'Loan_EMI_Obligations': 17.0,
+              'Current_Net_Worth': 3200000, 'Debt_to_Income_Ratio': 0.31,
+              'Credit_Score': 762, 'Investment_Experience(Years)': 6.0,
+              'Financial_Knowledge_Score': 7.1, 'Goal_Amount(₹)': 5500000,
+              'Goal_Timeline(Years)': 12, 'Risk_Taking_Ability': 'High',
+              'Occupation': 'Salaried', 'Primary_Financial_Goal': 'Retirement',
+              'Gender': 'Female', 'Marital_Status': 'Married', 'cluster': 3})
+          total = sum(allocation.values())
+          assert abs(total - 1) < 1e-5, total
+          print('allocation sums to', total)"
+
   frontend:
     name: Frontend build
     runs-on: ubuntu-latest
