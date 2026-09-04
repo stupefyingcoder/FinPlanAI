@@ -112,3 +112,81 @@ export function useGoals() {
 
   return { goals, loading, error, reload, createGoal, updateGoal, deleteGoal };
 }
+
+/**
+ * The signed-in user's account and profile, in the shape the dashboard tabs
+ * already read.
+ *
+ * The tabs were written against a flat snake_case object (`monthly_income`,
+ * `risk_comfort_level`, ...) that nothing ever supplied — App.js rendered the
+ * dashboard with no props at all, so every field was undefined and the Dashboard
+ * and Profile tabs showed zeros and "N/A" even for a user with a complete
+ * profile. Adapting here rather than editing each tab keeps the change small and
+ * puts the mapping in one reviewable place.
+ */
+export function useProfile() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [me, profileResponse] = await Promise.all([
+        api.get("/api/me"),
+        api.get("/api/profile"),
+      ]);
+
+      const p = profileResponse?.profile ?? {};
+      const extra = p.extra ?? {};
+      const asList = (value) => (Array.isArray(value) ? value.join(", ") : value || null);
+
+      const income = p.monthlyIncome ?? 0;
+      const expenses = p.monthlyExpenses ?? 0;
+
+      setData({
+        profileCompleted: profileResponse?.profileCompleted ?? false,
+
+        full_name: me?.account?.fullName ?? null,
+        email: me?.account?.email ?? null,
+        date_of_birth: extra.dob ?? null,
+        gender: p.gender ?? null,
+        marital_status: p.maritalStatus ?? null,
+        occupation_type: p.occupation ?? null,
+        number_of_dependents: p.dependentsCount ?? 0,
+
+        monthly_income: income,
+        monthly_expenses: expenses,
+        // The form stores a rate, not an amount; fall back to income - expenses.
+        monthly_savings: extra.monthly_savings_amt ?? Math.max(0, income - expenses),
+        emergency_fund_amount: p.emergencyFund ?? null,
+
+        has_loans: extra.has_loans ?? false,
+        loan_type: asList(extra.loan_types),
+        monthly_emi: p.approxEmi ?? null,
+
+        primary_goal: p.primaryGoal ?? null,
+        goal_target_amount: p.goalAmount ?? null,
+        goal_timeline_years: p.goalTimelineYears ?? null,
+
+        risk_comfort_level: p.riskLevel ?? null,
+        investment_horizon: p.investHorizon ?? null,
+        preferred_investment: asList(extra.preferred_assets),
+
+        health_insurance_cover: extra.health_insurance ?? null,
+        life_insurance_cover: extra.life_insurance ?? null,
+      });
+    } catch (err) {
+      setError(err.message || "Could not load your profile");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  return { userData: data, loading, error, reload: load };
+}
