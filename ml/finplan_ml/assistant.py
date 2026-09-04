@@ -13,8 +13,11 @@ goes blank when a third-party service is slow is worse than one that says so.
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 import logging
 import threading
+import time
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
@@ -109,6 +112,42 @@ def _is_rate_limit(text: str) -> bool:
     return "quota" in lowered or "429" in lowered or "rate limit" in lowered
 
 
+# Answers are cached briefly per (question, profile). Gemini's free tier allows
+# only 5 requests a minute and one agent answer costs several, so a reviewer
+# clicking the same suggested question twice would otherwise burn the budget and
+# get a fallback for their trouble.
+_CACHE_TTL_SECONDS = 600
+_CACHE_MAX = 64
+_cache: dict[str, tuple[float, "AssistantAnswer"]] = {}
+
+
+def _cache_key(question: str, features: Mapping[str, Any]) -> str:
+    payload = json.dumps({"q": question.strip().lower(), "f": sorted(map(str, features.items()))})
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+def _cache_get(key: str) -> "AssistantAnswer | None":
+    hit = _cache.get(key)
+    if not hit:
+        return None
+    stored_at, answer = hit
+    if time.time() - stored_at > _CACHE_TTL_SECONDS:
+        _cache.pop(key, None)
+        return None
+    return answer
+
+
+def _cache_put(key: str, answer: "AssistantAnswer") -> None:
+    # Only cache real answers — caching a rate-limit fallback would keep serving
+    # it for ten minutes after the limit cleared.
+    if answer.generated_by != "agents":
+        return
+    if len(_cache) >= _CACHE_MAX:
+        oldest = min(_cache, key=lambda k: _cache[k][0])
+        _cache.pop(oldest, None)
+    _cache[key] = (time.time(), answer)
+
+
 class Assistant:
     """Owns the agent and the retrieval index for the lifetime of the process."""
 
@@ -178,6 +217,11 @@ class Assistant:
                 note=f"Answered locally — {self.error}.",
             )
 
+        key = _cache_key(question, features)
+        cached = _cache_get(key)
+        if cached is not None:
+            return cached
+
         try:
             self.agent.set_customer_profile(features_to_profile(features, name))
             turn = _run_async(self.agent.process_query(question, use_multi_agent=use_multi_agent))
@@ -201,13 +245,15 @@ class Assistant:
                     note=note,
                 )
 
-            return AssistantAnswer(
+            result = AssistantAnswer(
                 answer=answer,
                 sources=list(turn.retrieved_docs or []),
                 agents_used=agents_used,
                 confidence=float(turn.confidence_score or 0.0),
                 generated_by="agents",
             )
+            _cache_put(key, result)
+            return result
         except Exception as exc:  # noqa: BLE001
             logger.warning("assistant query failed, falling back: %s", exc)
             return AssistantAnswer(
