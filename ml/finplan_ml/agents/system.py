@@ -15,7 +15,12 @@ from pydantic import BaseModel, Field, validator
 import google.generativeai as genai
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import FAISS
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+# Moved out of the langchain package into its own distribution; the old path
+# raises ModuleNotFoundError on any current install.
+try:
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+except ImportError:  # pragma: no cover - older langchain
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 # Import existing schemas
 from finplan_ml.schemas import NewCustomerProfile, DBCustomerProfile, SWOT, PlanText, CustomerPlanTexts
@@ -112,8 +117,8 @@ class RiskAssessmentTool(FinancialTool):
         
         # Risk taking ability
         risk_mapping = {"low": -0.2, "moderate": 0.0, "high": 0.3}
-        if profile.Risk_Taking_Ability:
-            score += risk_mapping.get(profile.Risk_Taking_Ability.lower(), 0)
+        if profile.Risk_Comfort_Level:
+            score += risk_mapping.get(profile.Risk_Comfort_Level.lower(), 0)
         
         return max(0.0, min(1.0, score))
     
@@ -480,7 +485,7 @@ class FinancialPlanningAgent:
                 enhanced_query = query
                 if self.memory.customer_profile:
                     enhanced_query += f" Customer context: Age {self.memory.customer_profile.Age}, "
-                    enhanced_query += f"Risk tolerance {self.memory.customer_profile.Risk_Taking_Ability}"
+                    enhanced_query += f"Risk tolerance {self.memory.customer_profile.Risk_Comfort_Level}"
                 
                 docs = self.vector_store.similarity_search(enhanced_query, k=5)
                 for doc in docs:

@@ -427,10 +427,10 @@ class AgentOrchestrator:
         Query: "{query}"
         
         Available agents and their capabilities:
-        - risk_analysis: {self.agents["risk_analysis"].get_capabilities()}
+        - risk_assessment: {self.agents["risk_assessment"].get_capabilities()}
         - goal_planning: {self.agents["goal_planning"].get_capabilities()}
-        - portfolio_optimization: {self.agents["portfolio_optimization"].get_capabilities()}
-        - tax_optimization: {self.agents["tax_optimization"].get_capabilities()}
+        - history: {self.agents["history"].get_capabilities()}
+        - synthesis: {self.agents["synthesis"].get_capabilities()}
         
         Return JSON with:
         {{
@@ -463,16 +463,20 @@ class AgentOrchestrator:
         
         # Keyword-based routing
         if any(word in query_lower for word in ["risk", "tolerance", "conservative", "aggressive", "volatility"]):
-            selected_agents.append("risk_analysis")
+            selected_agents.append("risk_assessment")
         
         if any(word in query_lower for word in ["goal", "retirement", "education", "sip", "target", "plan"]):
             selected_agents.append("goal_planning")
         
+        # Portfolio and tax questions route to the agents that exist. Dedicated
+        # portfolio_optimization and tax_optimization agents were named here but
+        # never constructed, so these branches raised KeyError on any query
+        # mentioning "portfolio", "fund", "tax" or "ELSS".
         if any(word in query_lower for word in ["portfolio", "allocation", "rebalance", "diversif", "fund"]):
-            selected_agents.append("portfolio_optimization")
+            selected_agents.append("risk_assessment")
         
         if any(word in query_lower for word in ["tax", "80c", "elss", "ppf", "nps", "deduction"]):
-            selected_agents.append("tax_optimization")
+            selected_agents.append("goal_planning")
         
         # Default to goal planning if no specific match
         if not selected_agents:
@@ -580,8 +584,22 @@ class EnhancedFinancialAgent(FinancialPlanningAgent):
                 )
                 
                 final_response = orchestrator_result["final_response"]
-                response_text = final_response["narrative"]
-                confidence = final_response["confidence"]
+                # An agent that raised returns {"agent", "error", "confidence"} with
+                # no narrative, so a direct subscript turned one failing sub-agent
+                # into a KeyError that replaced the whole answer.
+                response_text = final_response.get("narrative")
+                if not response_text:
+                    salvaged = [
+                        r["narrative"]
+                        for r in orchestrator_result.get("agent_results", {}).values()
+                        if isinstance(r, dict) and r.get("narrative")
+                    ]
+                    response_text = (
+                        "\n\n".join(salvaged)
+                        if salvaged
+                        else "I could not complete that analysis. Please rephrase the question."
+                    )
+                confidence = final_response.get("confidence", 0.3)
                 
                 # Create enhanced conversation turn
                 turn = ConversationTurn(
