@@ -87,9 +87,27 @@ def test_gold_forecast_has_an_uncertainty_band(registry):
 
 
 def test_vector_index_matches_the_embedding_dimension(registry):
-    """768 is Gemini text-embedding-004. A 384 here means a MiniLM index snuck in."""
-    assert registry.index.dimension == 768
+    """The index must match whatever EMBED_MODEL is configured.
+
+    An index can only be queried by the model that built it, and a mismatch does
+    not raise — it returns confident nonsense. Pinning a literal here was wrong:
+    text-embedding-004 (768) was retired for new API keys, so the index was
+    rebuilt with gemini-embedding-001 (3072). What matters is that the two agree.
+    """
+    from finplan_ml import config
+
+    expected = {
+        "models/text-embedding-004": 768,
+        "models/gemini-embedding-001": 3072,
+        "models/gemini-embedding-2": 3072,
+    }.get(config.EMBED_MODEL)
+
     assert registry.index.count > 0
+    if expected:
+        assert registry.index.dimension == expected, (
+            f"index is {registry.index.dimension}-dimensional but EMBED_MODEL is "
+            f"{config.EMBED_MODEL}; rebuild with `python -m training.build_index`"
+        )
 
 
 def test_missing_fields_raise_a_clear_error(registry):

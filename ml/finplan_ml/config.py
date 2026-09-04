@@ -56,9 +56,13 @@ GOLD_DATASET = ARTIFACTS_DIR / "gold_price_pred_dataset.csv"
 # --- Environment ---------------------------------------------------------
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # The original code read MODEL in some places and GEMINI_MODEL in others.
-GEMINI_MODEL = os.getenv("GEMINI_MODEL") or os.getenv("MODEL") or "gemini-2.5-flash"
-# 768-dimensional, matching the committed FAISS index.
-EMBED_MODEL = os.getenv("EMBED_MODEL", "models/text-embedding-004")
+# "…-latest" tracks Google's current flash model. Pinned names age out: a new
+# key is refused for gemini-2.5-flash with "no longer available to new users".
+GEMINI_MODEL = os.getenv("GEMINI_MODEL") or os.getenv("MODEL") or "models/gemini-flash-latest"
+# 3072-dimensional. text-embedding-004 is no longer offered to new keys, and an
+# index can only be queried by the model that built it — so changing this means
+# rebuilding: python -m training.build_index
+EMBED_MODEL = os.getenv("EMBED_MODEL", "models/gemini-embedding-001")
 
 API_PORT = int(os.getenv("PORT", "8000"))
 
