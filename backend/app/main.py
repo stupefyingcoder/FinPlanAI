@@ -24,7 +24,7 @@ if _ml_path not in sys.path:
     sys.path.insert(0, _ml_path)
 
 from app.db import Base, engine  # noqa: E402
-from app.routers import ai, auth, goals, ml, profile, session_bridge  # noqa: E402
+from app.routers import ai, auth, goals, ml, profile  # noqa: E402
 
 logger = logging.getLogger("finplan")
 
@@ -48,7 +48,6 @@ app.include_router(profile.router)
 app.include_router(goals.router)
 app.include_router(ml.router)
 app.include_router(ai.router)
-app.include_router(session_bridge.router)
 
 
 @app.on_event("startup")

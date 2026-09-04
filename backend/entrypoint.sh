@@ -2,7 +2,6 @@
 # Container entrypoint.
 #
 #   api        wait for the database, migrate, seed, then serve  (default)
-#   streamlit  run the embedded planner
 #   <other>    exec whatever was asked for, so `docker compose run api bash` works
 set -euo pipefail
 
@@ -37,16 +36,6 @@ case "${1:-api}" in
     exec python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
     ;;
 
-  streamlit)
-    wait_for_database
-    echo "starting Streamlit planner on :8501"
-    cd /app/ml
-    exec python -m streamlit run streamlit_app.py \
-      --server.port 8501 \
-      --server.address 0.0.0.0 \
-      --server.headless true \
-      --browser.gatherUsageStats false
-    ;;
 
   *)
     exec "$@"

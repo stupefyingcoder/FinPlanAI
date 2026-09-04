@@ -3,10 +3,9 @@
 #   docker compose up --build
 #   -> http://localhost:3000   dashboard (sign in as demo@finplan.ai / demo1234)
 #   -> http://localhost:8000/docs  API
-#   -> http://localhost:8501   planner (also embedded in the AI Insights tab)
 #
-# The API and the planner share one image: they import the same ML package, and
-# installing torch twice would double the build for no reason.
+# Three services. The planning agents run inside the API, so there is no separate
+# AI service to deploy, wake up or keep in visual step with the dashboard.
 
 name: finplan
 
@@ -39,7 +38,7 @@ services:
       # Dev defaults so the stack starts with no .env; override for anything real.
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-access-secret-not-for-production-0001}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret-not-for-production-002}
-      FRONTEND_ORIGINS: http://localhost:3000,http://localhost:8501
+      FRONTEND_ORIGINS: http://localhost:3000
       # Optional: without it the plan narrative is generated locally instead.
       GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     ports:
@@ -55,30 +54,11 @@ services:
       start_period: 60s
     restart: unless-stopped
 
-  streamlit:
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
-    command: ["streamlit"]
-    environment:
-      DATABASE_URL: mysql+pymysql://finplan:${MYSQL_PASSWORD:-finplan_dev_password}@mysql:3306/finplan
-      # Server-to-server inside the compose network.
-      FINPLAN_API_BASE: http://backend:8000
-      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
-    ports:
-      - "8501:8501"
-    depends_on:
-      backend:
-        condition: service_healthy
-    restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        # Baked in at build time: the browser resolves this, not the network.
-        REACT_APP_STREAMLIT_URL: http://localhost:8501
     ports:
       - "3000:80"
     depends_on:

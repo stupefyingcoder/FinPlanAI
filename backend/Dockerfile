@@ -1,5 +1,5 @@
-# One Python image serves both the API and the Streamlit planner: they share the
-# ML package and its dependencies, and torch is far too large to install twice.
+# One Python image: the API imports the ML package directly, so a prediction and a
+# planning answer are both function calls rather than a second service.
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
@@ -37,7 +37,7 @@ RUN tr -d '\r' < /app/entrypoint.sh > /app/entrypoint.tmp && mv /app/entrypoint.
 $//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 WORKDIR /app/backend
-EXPOSE 8000 8501
+EXPOSE 8000
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["api"]
