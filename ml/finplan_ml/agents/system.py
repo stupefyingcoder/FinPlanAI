@@ -117,8 +117,8 @@ class RiskAssessmentTool(FinancialTool):
         
         # Risk taking ability
         risk_mapping = {"low": -0.2, "moderate": 0.0, "high": 0.3}
-        if profile.Risk_Comfort_Level:
-            score += risk_mapping.get(profile.Risk_Comfort_Level.lower(), 0)
+        if profile.Risk_Taking_Ability:
+            score += risk_mapping.get(profile.Risk_Taking_Ability.lower(), 0)
         
         return max(0.0, min(1.0, score))
     
@@ -309,15 +309,17 @@ class FinancialPlanningAgent:
     
     def __init__(self, 
                  api_key: str,
-                 model_name: str = "gemini-2.5-flash",
-                 embed_model: str = "models/text-embedding-004"):
+                 model_name: str | None = None,
+                 embed_model: str | None = None):
         self.api_key = api_key
-        self.model_name = model_name
-        self.embed_model = embed_model
+        self.model_name = model_name or config.GEMINI_MODEL
+        # None means "whatever config says", so one setting drives both the
+        # index build and every query against it.
+        self.embed_model = embed_model or config.EMBED_MODEL
         
         # Initialize LLM
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel(model_name)
+        self.model = genai.GenerativeModel(self.model_name)
         
         # Initialize tools
         self.tools = {
@@ -485,7 +487,7 @@ class FinancialPlanningAgent:
                 enhanced_query = query
                 if self.memory.customer_profile:
                     enhanced_query += f" Customer context: Age {self.memory.customer_profile.Age}, "
-                    enhanced_query += f"Risk tolerance {self.memory.customer_profile.Risk_Comfort_Level}"
+                    enhanced_query += f"Risk tolerance {self.memory.customer_profile.Risk_Taking_Ability}"
                 
                 docs = self.vector_store.similarity_search(enhanced_query, k=5)
                 for doc in docs:
@@ -597,7 +599,7 @@ class FinancialPlanningAgent:
 
 # ====================== Integration Helper ====================== #
 
-def create_enhanced_agent(api_key: str, model_name: str = "gemini-2.5-flash") -> FinancialPlanningAgent:
+def create_enhanced_agent(api_key: str, model_name: str | None = None) -> FinancialPlanningAgent:
     """Factory function to create a fully configured agent"""
     agent = FinancialPlanningAgent(api_key=api_key, model_name=model_name)
     

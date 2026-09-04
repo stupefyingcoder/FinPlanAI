@@ -52,36 +52,61 @@ class AssistantAnswer:
 def features_to_profile(features: Mapping[str, Any], name: str | None = None):
     """Adapt the model-facing feature dict to the agents' profile schema.
 
-    The two halves of the project were built independently and name the same
-    quantities differently — `Annual_Income` here, `Monthly_Income` there — so
-    the conversion is explicit rather than assumed.
+    DBCustomerProfile, not NewCustomerProfile: the agent tools read
+    `Annual_Income` and `Risk_Taking_Ability`, and only this schema has both.
+    Building the wrong one made every agent fail with AttributeError, which the
+    orchestrator swallowed into an empty answer.
     """
-    from finplan_ml.schemas import NewCustomerProfile
+    from finplan_ml.schemas import DBCustomerProfile
 
     annual = float(features.get("Annual_Income") or 0)
     monthly_income = annual / 12 if annual else None
     monthly_expenses = features.get("Monthly_Expenses")
     savings_rate = float(features.get("Savings_Rate(%)") or 0)
 
-    return NewCustomerProfile(
+    return DBCustomerProfile(
         Customer_ID=str(features.get("Customer_ID", "dashboard-user")),
         Name=name,
         Age=features.get("Age"),
         Gender=features.get("Gender"),
         Occupation=features.get("Occupation"),
         Marital_Status=features.get("Marital_Status"),
-        Monthly_Income=monthly_income,
+        Annual_Income=annual or None,
         Monthly_Expenses=monthly_expenses,
-        Monthly_Savings=(monthly_income * savings_rate / 100) if monthly_income else None,
-        # The training column is a percentage of income, not a rupee amount.
-        EMI=(monthly_income * float(features.get("Loan_EMI_Obligations") or 0) / 100)
+        Monthly_Surplus=(monthly_income - float(monthly_expenses or 0))
         if monthly_income
         else None,
-        Primary_Financial_Goal=str(features.get("Primary_Financial_Goal") or "").replace("_", " ") or None,
-        Target_Amount=features.get("Goal_Amount(₹)"),
+        Current_Net_Worth=features.get("Current_Net_Worth"),
+        Primary_Financial_Goal=str(features.get("Primary_Financial_Goal") or "").replace("_", " ")
+        or None,
         Goal_Timeline_Years=features.get("Goal_Timeline(Years)"),
-        Risk_Comfort_Level=features.get("Risk_Taking_Ability"),
+        Preferred_Investment_Horizon=features.get("Preferred_Investment_Horizon"),
+        Risk_Taking_Ability=features.get("Risk_Taking_Ability"),
     )
+
+
+# Sub-agents catch their own exceptions and put the message into the narrative, so
+# a rate-limit or outage arrives looking like advice. Detect that rather than
+# showing a raw 429 to someone asking about their retirement.
+_ERROR_MARKERS = (
+    "error generating",
+    "exceeded your current quota",
+    "429 you exceeded",
+    "i encountered an error",
+    "could not complete that analysis",
+    "api key not valid",
+    "permission denied",
+)
+
+
+def _looks_like_an_error(text: str) -> bool:
+    lowered = (text or "").lower()
+    return any(marker in lowered for marker in _ERROR_MARKERS)
+
+
+def _is_rate_limit(text: str) -> bool:
+    lowered = (text or "").lower()
+    return "quota" in lowered or "429" in lowered or "rate limit" in lowered
 
 
 class Assistant:
@@ -160,8 +185,24 @@ class Assistant:
             capabilities = self.agent.get_orchestrator_capabilities()
             agents_used = sorted(capabilities.keys()) if isinstance(capabilities, dict) else []
 
+            answer = turn.agent_response or ""
+            if _looks_like_an_error(answer):
+                note = (
+                    "The planner hit Gemini's free-tier rate limit (a multi-agent answer "
+                    "costs several calls). Showing a summary from your profile instead — "
+                    "wait a minute and ask again."
+                    if _is_rate_limit(answer)
+                    else "The planning agents could not complete that request; "
+                    "this answer was generated locally."
+                )
+                return AssistantAnswer(
+                    answer=_local_answer(question, features),
+                    generated_by="fallback",
+                    note=note,
+                )
+
             return AssistantAnswer(
-                answer=turn.agent_response,
+                answer=answer,
                 sources=list(turn.retrieved_docs or []),
                 agents_used=agents_used,
                 confidence=float(turn.confidence_score or 0.0),
@@ -216,8 +257,8 @@ def _local_answer(question: str, features: Mapping[str, Any]) -> str:
     lines = [
         f'You asked: "{question.strip()}"',
         "",
-        "The conversational planner needs a Gemini API key, so here is what your "
-        "profile alone supports:",
+        "The conversational planner is unavailable right now — the note above says "
+        "why. Here is what your profile alone supports:",
         "",
         f"• You are {age or 'unspecified'}, saving about {savings_rate:.0f}% of "
         f"₹{income:,.0f} a year, working towards {goal}"

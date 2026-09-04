@@ -117,8 +117,11 @@ def test_the_profile_reaches_the_agents_with_units_intact(client, auth):
     }
     profile = features_to_profile(features, name="AI Tester")
 
-    assert profile.Monthly_Income == pytest.approx(120_000)
-    # 16.67% of 120,000 is about 20,000 rupees a month, not 16.67 rupees.
-    assert profile.EMI == pytest.approx(20_000, abs=100)
-    assert profile.Monthly_Savings == pytest.approx(33_000, abs=100)
+    # DBCustomerProfile is annual-income based; the agent tools read Annual_Income
+    # and Risk_Taking_Ability, and it is the only schema carrying both.
+    assert profile.Annual_Income == pytest.approx(1_440_000)
+    assert profile.Monthly_Expenses == pytest.approx(52_000)
+    # income/12 - expenses = 120,000 - 52,000
+    assert profile.Monthly_Surplus == pytest.approx(68_000, abs=100)
+    assert profile.Risk_Taking_Ability == "Medium"
     assert profile.Primary_Financial_Goal == "Emergency Fund"

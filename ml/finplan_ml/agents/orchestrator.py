@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 import google.generativeai as genai
 
 from finplan_ml.schemas import NewCustomerProfile, DBCustomerProfile
+from finplan_ml import config
 from finplan_ml.agents.system import (
     FinancialPlanningAgent, AgentState, ConversationTurn, AgentMemory,
     RiskAssessmentTool, GoalPlanningTool, PortfolioAnalysisTool
@@ -28,8 +29,8 @@ class BaseSubAgent(ABC):
     def __init__(self, name: str, api_key: str, model_name: str = "gemini-2.5-flash"):
         self.name = name
         self.api_key = api_key
-        self.model_name = model_name
-        self.model = genai.GenerativeModel(model_name)
+        self.model_name = model_name or config.GEMINI_MODEL
+        self.model = genai.GenerativeModel(self.model_name)
         
     @abstractmethod
     async def process(self, customer_profile: Union[NewCustomerProfile, DBCustomerProfile], query: str, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -44,7 +45,7 @@ class BaseSubAgent(ABC):
 
 class RiskAssessmentAgent(BaseSubAgent):
     """Specialized agent for comprehensive risk assessment"""
-    def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: str, model_name: str | None = None):
         super().__init__("Risk Assessment Agent", api_key, model_name)
         self.risk_tool = RiskAssessmentTool()
     async def process(self, customer_profile: Union[NewCustomerProfile, DBCustomerProfile], query: str, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -92,7 +93,7 @@ class RiskAssessmentAgent(BaseSubAgent):
 class GoalPlanningAgent(BaseSubAgent):
     """Specialized agent for goal-based financial planning"""
     
-    def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: str, model_name: str | None = None):
         super().__init__("Goal Planning Agent", api_key, model_name)
         self.goal_tool = GoalPlanningTool()
     
@@ -185,7 +186,7 @@ class GoalPlanningAgent(BaseSubAgent):
 class SynthesisAgent(BaseSubAgent):
     """Specialized agent for portfolio analysis and optimization"""
     
-    def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: str, model_name: str | None = None):
         super().__init__("Synthesis Agent", api_key, model_name)
         self.portfolio_tool = PortfolioAnalysisTool()
     
@@ -256,7 +257,7 @@ class SynthesisAgent(BaseSubAgent):
 class HistoryAgent(BaseSubAgent):
     """Specialized agent for tax optimization strategies"""
     
-    def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: str, model_name: str | None = None):
         super().__init__("History Agent", api_key, model_name)
     
     async def process(self, customer_profile: Union[NewCustomerProfile, DBCustomerProfile], query: str, context: Dict[str, Any]) -> Dict[str, Any]:
@@ -360,10 +361,10 @@ class HistoryAgent(BaseSubAgent):
 class AgentOrchestrator:
     """Orchestrates multiple specialized agents based on query intent"""
     
-    def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: str, model_name: str | None = None):
         self.api_key = api_key
-        self.model_name = model_name
-        self.model = genai.GenerativeModel(model_name)
+        self.model_name = model_name or config.GEMINI_MODEL
+        self.model = genai.GenerativeModel(self.model_name)
         
         # Initialize specialized agents
         self.agents = {
@@ -546,7 +547,7 @@ class AgentOrchestrator:
 class EnhancedFinancialAgent(FinancialPlanningAgent):
     """Enhanced financial agent with multi-agent orchestration capabilities"""
     
-    def __init__(self, api_key: str, model_name: str = "gemini-2.5-flash", embed_model: str = "models/text-embedding-004"):
+    def __init__(self, api_key: str, model_name: str | None = None, embed_model: str | None = None):
         super().__init__(api_key, model_name, embed_model)
         
         # Add orchestrator
@@ -649,7 +650,7 @@ class EnhancedFinancialAgent(FinancialPlanningAgent):
 
 # ====================== Factory Function ====================== #
 
-def create_advanced_agent(api_key: str, model_name: str = "gemini-2.5-flash") -> EnhancedFinancialAgent:
+def create_advanced_agent(api_key: str, model_name: str | None = None) -> EnhancedFinancialAgent:
     """Factory function to create an advanced multi-agent system"""
     agent = EnhancedFinancialAgent(api_key=api_key, model_name=model_name)
     
