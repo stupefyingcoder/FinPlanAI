@@ -7,8 +7,14 @@
  *
  * Override with REACT_APP_API_URL (see .env.example).
  */
-export const API_BASE =
-  process.env.REACT_APP_API_URL || "http://localhost:8000";
+// An *unset* variable means local development, so default to the dev API port.
+// An explicitly *empty* variable means "same origin" — that is what the Docker
+// build sets, so nginx can proxy /api and /auth to the backend and the browser
+// never makes a cross-origin request. `||` cannot express that difference,
+// because an empty string is falsy.
+const configured = process.env.REACT_APP_API_URL;
+
+export const API_BASE = configured === undefined ? "http://localhost:8000" : configured;
 
 /** Build a full URL for an API path: apiUrl("/auth/login"). */
 export function apiUrl(path) {
