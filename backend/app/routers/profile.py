@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from typing import Any
+
+from fastapi import APIRouter, Body, Depends, HTTPException
+from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -10,6 +13,7 @@ from app.deps import get_current_user
 from app.models import UserAccount, UserProfile
 from app.schemas import MeResponse, ProfileRequest, ProfileResponse
 from app.services.ml_mapping import request_to_columns
+from app.services.profile_intake import flat_to_columns, looks_flat
 
 router = APIRouter(tags=["profile"])
 
@@ -65,12 +69,24 @@ def get_profile(
 
 @router.post("/api/profile", response_model=ProfileResponse)
 def upsert_profile(
-    payload: ProfileRequest,
+    payload: dict[str, Any] = Body(...),
     user: UserAccount = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Create or replace the profile, then mark the account complete."""
-    columns = request_to_columns(payload)
+    """Create or replace the profile, then mark the account complete.
+
+    Two payload shapes are accepted: the flat snake_case object the React form
+    posts today, and the documented nested schema. Taking a raw dict here and
+    dispatching on its shape is what lets both work — the form serializes several
+    arrays as JSON strings, which a strict list field rejects outright.
+    """
+    if looks_flat(payload):
+        columns = flat_to_columns(payload)
+    else:
+        try:
+            columns = request_to_columns(ProfileRequest.model_validate(payload))
+        except ValidationError as exc:
+            raise HTTPException(status_code=422, detail=exc.errors()) from exc
     profile = db.query(UserProfile).filter(UserProfile.user_id == user.user_id).one_or_none()
 
     if profile is None:
