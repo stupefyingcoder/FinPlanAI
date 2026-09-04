@@ -2,6 +2,7 @@ import "./App.css";
 import Logo from "./assets/logo.png";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthProvider";
+import RequireAuth from "./auth/RequireAuth";
 import HomePage from "./pages/HomePage";
 import ProfileCreation from "./pages/ProfileCreation";
 import Dashboard from "./pages/main-dashboard";
@@ -11,18 +12,35 @@ import Header from "./pages/HomePage/Header";
 
 function AppInner() {
   const location = useLocation();
-  const hideHeaderRoutes = ["/login", "/loginPage"];
-  const shouldShowHeader = !hideHeaderRoutes.includes(location.pathname);
+  // The dashboard has its own sidebar and chrome; the marketing header and
+  // footer around it produced two competing navigations on the same screen.
+  const bareRoutes = ["/login", "/loginPage", "/dashboard"];
+  const isBare = bareRoutes.includes(location.pathname);
 
   return (
     <div className="App flex flex-col min-h-screen">
-      {shouldShowHeader && <Header logo={Logo} />}
+      {!isBare && <Header logo={Logo} />}
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/profile-creation" element={<ProfileCreation />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+
+          <Route
+            path="/profile-creation"
+            element={
+              <RequireAuth>
+                <ProfileCreation />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/dashboard"
+            element={
+              <RequireAuth>
+                <Dashboard />
+              </RequireAuth>
+            }
+          />
 
           {/* backward compatible routes */}
           <Route path="/loginPage" element={<Navigate to="/login" replace />} />
@@ -32,7 +50,7 @@ function AppInner() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <Footer />
+      {!isBare && <Footer />}
     </div>
   );
 }
