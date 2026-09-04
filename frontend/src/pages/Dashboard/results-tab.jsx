@@ -171,13 +171,15 @@ const ResultsTab = ({ userData }) => {
                     <span className="font-semibold text-gray-900">{plan.riskLevel}</span>
                   </div>
                 </div>
-                <button
-                  className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
-                    index === 0 ? "bg-blue-600 text-white hover:bg-blue-700" : "border border-gray-300 text-gray-700 hover:bg-gray-50"
+                <div
+                  className={`w-full py-2 px-4 rounded-md font-medium text-center ${
+                    index === 0
+                      ? "bg-blue-50 text-blue-700 border border-blue-200"
+                      : "bg-gray-50 text-gray-500 border border-gray-200"
                   }`}
                 >
-                  {index === 0 ? "Recommended" : "Select Plan"}
-                </button>
+                  {index === 0 ? "Best match for your risk profile" : "Alternative"}
+                </div>
               </div>
             </div>
           ))}
@@ -326,9 +328,6 @@ const ResultsTab = ({ userData }) => {
               {recommendations.stocks.map((stock, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-900">{stock}</span>
-                  <button className="px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                    View
-                  </button>
                 </div>
               ))}
             </div>
@@ -347,9 +346,6 @@ const ResultsTab = ({ userData }) => {
               {recommendations.schemes.map((scheme, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-900">{scheme}</span>
-                  <button className="px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                    View
-                  </button>
                 </div>
               ))}
             </div>
@@ -368,9 +364,6 @@ const ResultsTab = ({ userData }) => {
               {recommendations.sip.map((sip, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-900">{sip}</span>
-                  <button className="px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                    View
-                  </button>
                 </div>
               ))}
             </div>
@@ -389,9 +382,6 @@ const ResultsTab = ({ userData }) => {
               {recommendations.gold.map((gold, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <span className="text-gray-900">{gold}</span>
-                  <button className="px-3 py-1 text-sm border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                    View
-                  </button>
                 </div>
               ))}
             </div>

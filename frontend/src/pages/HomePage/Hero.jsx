@@ -271,18 +271,6 @@ const Hero = ({ model, logos = [] }) => {
             </p>
 
             <div className="flex items-center gap-3">
-              <button
-                aria-label="Previous"
-                className="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-full bg-black"
-              >
-                <span className="text-white">&lt;</span>
-              </button>
-              <button
-                aria-label="Next"
-                className="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-full bg-black"
-              >
-                <span className="text-white">&gt;</span>
-              </button>
             </div>
           </div>
 
