@@ -9,6 +9,9 @@ import { FinancialGoals } from "./Dashboard/financial-goals"
 import ProfileTab from "./Dashboard/profile-tab"
 import AIInsightsTab from "./Dashboard/ai-insights-tab"
 import { useProfile } from "../api/hooks"
+// The square icon is transparent, so it sits on the dark sidebar; the
+// horizontal lockup has a baked-in white background and is used in the header.
+import Mark from "../assets/logo.png"
 
 /**
  * Dashboard shell.
@@ -95,9 +98,14 @@ const MainDashboard = () => {
   return (
     <div className="flex h-screen bg-gray-50">
       <div className="w-64 bg-gray-900 text-white shrink-0">
-        <div className="p-6">
-          <h1 className="text-xl font-bold text-white">FinPlan AI</h1>
-          <p className="text-sm text-gray-300 mt-1">Financial planning</p>
+        <div className="p-6 flex items-center gap-3">
+          <span className="bg-white rounded-lg p-1.5 shrink-0">
+            <img src={Mark} alt="" aria-hidden="true" className="w-7 h-7 object-contain" />
+          </span>
+          <span>
+            <span className="block text-lg font-bold text-white leading-tight">FinPlan AI</span>
+            <span className="block text-xs text-gray-400">Financial planning</span>
+          </span>
         </div>
 
         <nav className="mt-8">

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginImg from "../assets/LoginBg.png";
+import Lockup from "../assets/horizontal_logo_with_FinPlan_written.png";
 import { useAuth } from "../auth/AuthProvider";
 import { apiUrl } from "../api/config";
 
@@ -130,13 +131,14 @@ export default function LoginPage() {
             className="fade-in bg-white/95 backdrop-blur-sm rounded-2xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-8 w-full"
           >
             <div className="mb-8">
+              <img src={Lockup} alt="FinPlan AI" className="h-8 w-auto object-contain mb-5" />
               <h1 className="text-2xl font-semibold">
-                {isSignUp ? "Create your account" : "Secure your future today!"}
+                {isSignUp ? "Create your account" : "Welcome back"}
               </h1>
-              <p className="mt-2 text-sm text-gray-800">
+              <p className="mt-2 text-sm text-gray-600">
                 {isSignUp
-                  ? "Sign up for mavericks AI"
-                  : "Sign in to your mavericks AI account"}
+                  ? "Sign up to build your financial plan."
+                  : "Sign in to your FinPlan AI account."}
               </p>
             </div>
 

@@ -1,5 +1,6 @@
 import "./App.css";
-import Logo from "./assets/logo.png";
+// The horizontal lockup: icon plus wordmark, sized for a light header bar.
+import Logo from "./assets/horizontal_logo_with_FinPlan_written.png";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthProvider";
 import RequireAuth from "./auth/RequireAuth";
