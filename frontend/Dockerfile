@@ -15,9 +15,6 @@ COPY . .
 # An empty API base makes every request relative, and nginx proxies it to the
 # backend — same origin, so no CORS and no hardcoded hostname in the bundle.
 ENV REACT_APP_API_URL=""
-ARG REACT_APP_STREAMLIT_URL=http://localhost:8501
-ENV REACT_APP_STREAMLIT_URL=$REACT_APP_STREAMLIT_URL
-
 RUN npm run build
 
 
