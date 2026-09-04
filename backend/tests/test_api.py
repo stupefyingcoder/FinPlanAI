@@ -130,11 +130,15 @@ def test_emi_is_converted_from_rupees_to_percent(client, auth):
     would be far outside the training range and produce a garbage allocation.
     """
     from app.db import SessionLocal
-    from app.models import UserProfile
+    from app.models import UserAccount, UserProfile
     from app.services.ml_mapping import profile_to_features
 
+    # Scope to this test's own user. Test modules share one engine — it is bound
+    # at first import — so assuming the database holds exactly one profile breaks
+    # as soon as another module signs someone up.
     with SessionLocal() as db:
-        profile = db.query(UserProfile).one()
+        user = db.query(UserAccount).filter(UserAccount.email == EMAIL).one()
+        profile = db.query(UserProfile).filter(UserProfile.user_id == user.user_id).one()
         features = profile_to_features(profile)
 
     assert features["Loan_EMI_Obligations"] == pytest.approx(16.67, abs=0.1)
