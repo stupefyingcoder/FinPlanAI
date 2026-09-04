@@ -92,41 +92,7 @@ import { apiUrl } from "../../api/config";
 //           </Link>
 //         </div>
 
-//         {/* bottom divider + logos row */}
-//         <div className="mt-10 border-t border-gray-200 pt-6">
-//           <div className="flex items-center justify-between gap-4">
-//             <p className="text-sm text-gray-600">
-//               We provide our service to many worldwide leading companies.
-//             </p>
-
-//             <div className="flex items-center gap-3">
-//               <button
-//                 aria-label="Previous"
-//                 className="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-full bg-black"
-//               >
-//                 <span className="text-white">&lt;</span>
-//               </button>
-//               <button
-//                 aria-label="Next"
-//                 className="w-9 h-9 flex items-center justify-center border border-gray-300 rounded-full bg-black"
-//               >
-//                 <span className="text-white">&gt;</span>
-//               </button>
-//             </div>
-//           </div>
-
-//           <div className="mt-4 flex flex-wrap items-center gap-6">
-//             {logos.map((l, i) => (
-//               <img
-//                 key={i}
-//                 src={l ?? "/placeholder.svg"}
-//                 alt={`Partner ${i + 1}`}
-//                 className="h-6 object-contain"
-//               />
-//             ))}
-//           </div>
-//         </div>
-//       </div>
+// //       </div>
 
 //       {/* Image column */}
 //       <div className="md:w-1/2 w-full mb-6 md:mb-0 flex justify-end px-6 md:px-12 relative">
@@ -263,28 +229,6 @@ const Hero = ({ model, logos = [] }) => {
           </button>
         </div>
 
-        {/* bottom divider + logos row */}
-        <div className="mt-10 border-t border-gray-200 pt-6">
-          <div className="flex items-center justify-between gap-4">
-            <p className="text-sm text-gray-600">
-              We provide our service to many worldwide leading companies.
-            </p>
-
-            <div className="flex items-center gap-3">
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center gap-6">
-            {logos.map((l, i) => (
-              <img
-                key={i}
-                src={l ?? "/placeholder.svg"}
-                alt={`Partner ${i + 1}`}
-                className="h-6 object-contain"
-              />
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* Image column */}

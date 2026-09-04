@@ -82,7 +82,7 @@ const Footer = ({ sticky = false }) => {
             </div>
 
             <p className="text-sm text-slate-400 leading-relaxed">
-              Intelligent and data-driven financial planning for advisors and investors — clear insights and better outcomes.
+              Data-driven financial planning for individual investors — clear insights and better outcomes.
             </p>
 
             <div className="flex items-center gap-3 mt-2">
@@ -240,12 +240,12 @@ const Footer = ({ sticky = false }) => {
         {/* Bottom row */}
         <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <div className="text-center md:text-left">
-            <p>© {year} YourFinanceCo. All rights reserved.</p>
+            <p>© {year} FinPlan AI. Built by Team AI Mavericks.</p>
             <p className="mt-1">
               Support:{" "}
               <a href="tel:+18005550123" className="hover:text-white">1-800-555-0123</a>{" "}
               |{" "}
-              <a href="mailto:support@yourfinanceco.com" className="hover:text-white">support@yourfinanceco.com</a>
+              <a href="mailto:hello@finplan.ai" className="hover:text-white">hello@finplan.ai</a>
             </p>
           </div>
 

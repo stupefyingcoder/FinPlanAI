@@ -120,7 +120,7 @@ const Features = ({ features = {} }) => {
                        id="b-title"
                        className="text-2xl md:text-3xl font-bold text-slate-900"
                      >
-                       Manage Accounts
+                       One financial profile
                      </h4>
                      <span
                        className="h-1.5 w-8 rounded-full"
@@ -131,8 +131,8 @@ const Features = ({ features = {} }) => {
                      />
                    </div>
                    <p className="text-left text-slate-600 text-sm mt-2">
-                     Securely connect banks, cards and investments; view cash
-                     flow and reminders in a single place.
+                     Capture income, savings, liabilities, goals and risk
+                     appetite once — every recommendation is built from it.
                    </p>
                  </div>
  
