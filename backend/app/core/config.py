@@ -21,12 +21,31 @@ def _bool(name: str, default: bool = False) -> bool:
     return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _normalize_database_url(url: str) -> str:
+    """Pin Postgres URLs to the psycopg 3 driver.
+
+    Managed providers hand out `postgres://` or `postgresql://`, and SQLAlchemy
+    resolves the bare form to the **psycopg2** dialect — which is not installed,
+    because this project uses psycopg 3. Normalising at the single point where
+    the setting is read means every consumer agrees: the app, Alembic, and the
+    seed script. Doing it in db.py only was not enough — Alembic never imports
+    db.py, so migrations picked the wrong driver and the deploy died at startup.
+    """
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+psycopg://", 1)
+    if url.startswith("postgresql://"):
+        return url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return url
+
+
 class Settings:
     APP_NAME = "FinPlan AI"
     API_VERSION = "0.3.0"
 
-    # Zero-setup default; set DATABASE_URL to mysql+pymysql://... for production.
-    DATABASE_URL = os.getenv("DATABASE_URL", f"sqlite:///{(BACKEND_ROOT / 'finplan.db').as_posix()}")
+    # Zero-setup default; set DATABASE_URL to a Postgres or MySQL URL in production.
+    DATABASE_URL = _normalize_database_url(
+        os.getenv("DATABASE_URL", f"sqlite:///{(BACKEND_ROOT / 'finplan.db').as_posix()}")
+    )
 
     JWT_ACCESS_SECRET = os.getenv("JWT_ACCESS_SECRET", "dev-access-secret-change-me")
     JWT_REFRESH_SECRET = os.getenv("JWT_REFRESH_SECRET", "dev-refresh-secret-change-me")

@@ -14,14 +14,8 @@ class Base(DeclarativeBase):
     pass
 
 
+# Already normalised to the psycopg 3 dialect by config.
 _url = settings.DATABASE_URL
-
-# Managed Postgres providers hand out postgres:// URLs, which SQLAlchemy 2 does
-# not recognise; normalise rather than making every deploy edit its own env var.
-if _url.startswith("postgres://"):
-    _url = _url.replace("postgres://", "postgresql+psycopg://", 1)
-elif _url.startswith("postgresql://"):
-    _url = _url.replace("postgresql://", "postgresql+psycopg://", 1)
 
 _connect_args = {"check_same_thread": False} if _url.startswith("sqlite") else {}
 
