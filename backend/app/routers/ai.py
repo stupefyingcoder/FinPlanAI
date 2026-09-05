@@ -162,11 +162,18 @@ def chat(
         future = _executor.submit(_assistant().ask, payload.message, features, user.full_name, True)
         result = future.result(timeout=settings.LLM_TIMEOUT_SECONDS)
     except concurrent.futures.TimeoutError:
-        raise HTTPException(
-            status_code=504,
-            detail=f"The planner did not respond within {settings.LLM_TIMEOUT_SECONDS:.0f}s. "
-            "Please try again.",
-        ) from None
+        # Degrade rather than 504. A multi-agent answer is several sequential
+        # Gemini calls and can genuinely run long; showing the profile-based
+        # summary is more useful to the reader than a gateway error, and matches
+        # how every other AI path here behaves.
+        from finplan_ml.assistant import AssistantAnswer, _local_answer
+
+        result = AssistantAnswer(
+            answer=_local_answer(payload.message, features),
+            generated_by="fallback",
+            note=f"The planner took longer than {settings.LLM_TIMEOUT_SECONDS:.0f}s. "
+            "Here is a summary from your profile — ask again for the full agent answer.",
+        )
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=502, detail=f"Planner error: {exc}") from exc
 

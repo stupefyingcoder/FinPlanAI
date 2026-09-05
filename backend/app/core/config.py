@@ -47,8 +47,10 @@ class Settings:
         if o.strip()
     ]
 
-    # Seconds to wait on a Gemini call before falling back to a deterministic plan.
-    LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "25"))
+    # Seconds to wait before falling back to a deterministic answer. A
+    # multi-agent reply is several sequential Gemini calls, so 25s was short
+    # enough to time out on genuinely healthy requests.
+    LLM_TIMEOUT_SECONDS = float(os.getenv("LLM_TIMEOUT_SECONDS", "45"))
 
     @property
     def using_default_secrets(self) -> bool:

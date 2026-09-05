@@ -58,7 +58,8 @@ def test_chat_requires_authentication(client):
     assert client.post("/api/ai/chat", json={"message": "hello"}).status_code == 401
 
 
-def test_chat_answers_even_without_an_api_key(client, auth):
+def test_chat_always_answers(client, auth):
+    """With a key it uses the agents, without one the local summary — never an error."""
     response = client.post(
         "/api/ai/chat", json={"message": "Am I saving enough for retirement?"}, headers=auth
     )
