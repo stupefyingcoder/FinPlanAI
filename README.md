@@ -83,9 +83,11 @@ docs/                    Project deck and codebase documentation
 | Market Analysis tab | Renders the Prophet forecast with its uncertainty band |
 | Financial Goals tab | Real CRUD against `financial_goals` |
 | AI Insights tab | Plan summary rendered natively, planner embedded via a signed session token |
-| Docker | `docker compose up` runs MySQL, API, planner and dashboard |
-| CI | GitHub Actions runs both test suites, the frontend build and the image build |
+| Docker | `docker compose up` runs Postgres/MySQL, the API and the dashboard |
+| CI | Both test suites, the frontend build, the image build, and a job proving serving needs no PyTorch |
+| Deployment | Blueprints for Render (API + Postgres) and Vercel (dashboard) |
 | Express backend | **Removed** — fully replaced by FastAPI |
+| Streamlit planner | **Removed** — the agents run inside the API |
 
 Market indices, stock and currency figures on the Market Analysis tab remain illustrative
 sample data — there is no live market feed connected, and the UI says so.
@@ -175,6 +177,38 @@ cd backend && ../ml/.venv/Scripts/python -m app.seed
 Copy `.env.example` to `.env` in `backend/`, `frontend/` and `ml/` and fill in your own values.
 A Gemini key is needed only for the written narrative — every model prediction works without one.
 **Never commit a `.env`.**
+
+## Deploying
+
+The API and the dashboard deploy separately: a static bundle on a CDN is free and
+faster than serving it from the API container.
+
+**API + database — Render.** `render.yaml` is a blueprint: point Render at this
+repository and it creates the web service and a Postgres instance, generates the
+JWT secrets, and wires the connection string. Two values are left for you:
+`GEMINI_API_KEY` (optional) and `FRONTEND_ORIGINS` (the Vercel URL, once you have
+it).
+
+**Dashboard — Vercel.** Import the repository, set the root directory to
+`frontend/`, and set `REACT_APP_API_URL` to the Render URL. Create React App
+inlines that at build time, so changing it needs a redeploy.
+
+Two things that bite on free tiers, both already handled:
+
+- **Cold starts.** Free instances sleep after inactivity and take up to a minute
+  to wake. The dashboard polls `/health` on load and shows a "waking the server"
+  banner instead of hanging silently.
+- **Cross-site cookies.** Once the API and the dashboard are on different
+  domains, the refresh cookie needs `Secure` and `SameSite=None` or the browser
+  drops it — which presents as "login works, then I'm logged out". `render.yaml`
+  sets both.
+
+The image deliberately excludes PyTorch. The allocation network is 4,677
+parameters and runs in NumPy from `artifacts/portfolio_model.npz`; installing a
+536 MB framework to do three matrix multiplies is what puts a project like this
+over free-tier limits. Training still uses PyTorch — see `ml/requirements.txt`
+versus `ml/requirements-serve.txt` — and a CI job installs only the serving set,
+asserts `torch` is not importable, and predicts an allocation anyway.
 
 ## Team
 
