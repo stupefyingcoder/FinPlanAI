@@ -58,9 +58,13 @@ GOLD_DATASET = ARTIFACTS_DIR / "gold_price_pred_dataset.csv"
 # --- Environment ---------------------------------------------------------
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # The original code read MODEL in some places and GEMINI_MODEL in others.
-# "…-latest" tracks Google's current flash model. Pinned names age out: a new
-# key is refused for gemini-2.5-flash with "no longer available to new users".
-GEMINI_MODEL = os.getenv("GEMINI_MODEL") or os.getenv("MODEL") or "models/gemini-flash-latest"
+# flash-lite, not flash. The free tier caps gemini-flash-latest at 20 requests
+# per day per project — a handful of multi-agent answers and a reviewer hits a
+# wall. The quota is per model, and flash-lite's allowance is far larger, which
+# matters more here than the quality difference on a summarisation task.
+# "…-latest" also avoids pinned names ageing out: a new key is already refused
+# for gemini-2.5-flash with "no longer available to new users".
+GEMINI_MODEL = os.getenv("GEMINI_MODEL") or os.getenv("MODEL") or "models/gemini-flash-lite-latest"
 # 3072-dimensional. text-embedding-004 is no longer offered to new keys, and an
 # index can only be queried by the model that built it — so changing this means
 # rebuilding: python -m training.build_index

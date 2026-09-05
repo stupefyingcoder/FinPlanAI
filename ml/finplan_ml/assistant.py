@@ -109,7 +109,10 @@ def _looks_like_an_error(text: str) -> bool:
 
 def _is_rate_limit(text: str) -> bool:
     lowered = (text or "").lower()
-    return "quota" in lowered or "429" in lowered or "rate limit" in lowered
+    return any(
+        marker in lowered
+        for marker in ("quota", "429", "rate limit", "resource_exhausted", "exceeded your current")
+    )
 
 
 # Answers are cached briefly per (question, profile). Gemini's free tier allows
