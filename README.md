@@ -214,5 +214,3 @@ asserts `torch` is not importable, and predicts an allocation anyway.
 
 Sanika Kulkarni · Kashish Jain · Sarang Kokane · Prajwal Kulkarni · Yatesh Ahire · Omkar Kokate · Uday Lowalekar
 
-The GenAI and machine-learning codebase was developed by Sanika Kulkarni; the application backend
-and dashboard by Kashish Jain and Yatesh Ahire. Commit attribution is preserved on the imports.
