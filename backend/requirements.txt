@@ -11,6 +11,7 @@ alembic>=1.13
 PyMySQL>=1.1          # MySQL
 psycopg[binary]>=3.2  # Postgres — what the managed free tiers offer
 # SQLite needs no driver
+psycopg2-binary
 
 # Auth
 PyJWT>=2.8
