@@ -4,6 +4,7 @@ import Logo from "./assets/horizontal_logo_with_FinPlan_written.png";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { AuthProvider } from "./auth/AuthProvider";
 import RequireAuth from "./auth/RequireAuth";
+import ColdStartBanner from "./components/ColdStartBanner";
 import HomePage from "./pages/HomePage";
 import ProfileCreation from "./pages/ProfileCreation";
 import Dashboard from "./pages/main-dashboard";
@@ -20,6 +21,7 @@ function AppInner() {
 
   return (
     <div className="App flex flex-col min-h-screen">
+      <ColdStartBanner />
       {!isBare && <Header logo={Logo} />}
       <main className="flex-grow">
         <Routes>
