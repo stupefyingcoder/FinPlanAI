@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-import { apiUrl } from "../api/config";
+import { API_BASE, apiUrl } from "../api/config";
 
 /**
  * Explains the free tier's cold start.
@@ -18,9 +18,24 @@ const POLL_MS = 2500;
 const GIVE_UP_MS = 90000;
 
 export default function ColdStartBanner() {
-  const [state, setState] = useState("checking"); // checking | waking | ready | down
+  const [state, setState] = useState("checking"); // checking | waking | ready | down | misconfigured
+
+  // A deployed page pointing at localhost, or at itself, cannot reach an API.
+  // That is a build-time configuration mistake, not a cold start, and saying
+  // "still starting up" about it sends people looking in the wrong place.
+  const servedRemotely =
+    typeof window !== "undefined" &&
+    !["localhost", "127.0.0.1"].includes(window.location.hostname);
+  const pointsAtLocalhost = /localhost|127\.0\.0\.1/.test(API_BASE);
+  const pointsAtItself = API_BASE === "";
+  const misconfigured = servedRemotely && (pointsAtLocalhost || pointsAtItself);
 
   useEffect(() => {
+    if (misconfigured) {
+      setState("misconfigured");
+      return undefined;
+    }
+
     let cancelled = false;
     const startedAt = Date.now();
 
@@ -52,9 +67,23 @@ export default function ColdStartBanner() {
       cancelled = true;
       clearTimeout(showIfSlow);
     };
-  }, []);
+  }, [misconfigured]);
 
   if (state === "checking" || state === "ready") return null;
+
+  if (state === "misconfigured") {
+    return (
+      <div
+        role="status"
+        className="w-full text-sm px-4 py-2.5 text-center bg-red-50 text-red-800 border-b border-red-200"
+      >
+        This build has no API address. Set <code>REACT_APP_API_URL</code> to the backend URL in
+        your hosting provider and redeploy — the value is compiled in at build time, so a
+        restart alone will not pick it up.
+        {pointsAtLocalhost && " (It is currently pointing at localhost.)"}
+      </div>
+    );
+  }
 
   const waking = state === "waking";
 

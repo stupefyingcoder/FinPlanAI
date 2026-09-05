@@ -10,8 +10,10 @@ SQLAlchemy>=2.0
 alembic>=1.13
 PyMySQL>=1.1          # MySQL
 psycopg[binary]>=3.2  # Postgres — what the managed free tiers offer
+# psycopg2-binary is deliberately absent: db.py normalises Render's
+# postgresql:// URL to the psycopg 3 dialect, so installing the v2 driver as
+# well just adds a second build to every deploy for a driver nothing selects.
 # SQLite needs no driver
-psycopg2-binary
 
 # Auth
 PyJWT>=2.8
