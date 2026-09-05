@@ -38,14 +38,22 @@ class Settings:
     COOKIE_SECURE = _bool("COOKIE_SECURE", False)
     COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "lax")
 
+    # An *empty* value must not mean "allow nothing". Render's blueprint creates
+    # `sync: false` variables with an empty string, so a deployment where nobody
+    # filled it in ended up with an allow-list of zero origins — the browser was
+    # then blocked from every response, including /health, which presents as
+    # "the API is not responding" while curl reports a perfectly healthy 200.
+    _DEFAULT_ORIGINS = "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3001"
     FRONTEND_ORIGINS = [
         o.strip()
-        for o in os.getenv(
-            "FRONTEND_ORIGINS",
-            "http://localhost:3000,http://localhost:3001,http://127.0.0.1:3001",
-        ).split(",")
+        for o in (os.getenv("FRONTEND_ORIGINS", "").strip() or _DEFAULT_ORIGINS).split(",")
         if o.strip()
     ]
+
+    # Vercel gives every preview deployment its own hostname, so pinning only the
+    # production URL breaks each preview. Set FRONTEND_ORIGIN_REGEX to something
+    # like https://.*\.vercel\.app to cover them.
+    FRONTEND_ORIGIN_REGEX = os.getenv("FRONTEND_ORIGIN_REGEX", "").strip() or None
 
     # Seconds to wait before falling back to a deterministic answer. A
     # multi-agent reply is several sequential Gemini calls, so 25s was short

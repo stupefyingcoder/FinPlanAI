@@ -38,6 +38,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.FRONTEND_ORIGINS,
+    allow_origin_regex=settings.FRONTEND_ORIGIN_REGEX,
     allow_credentials=True,  # required for the httpOnly refresh cookie
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,6 +56,13 @@ def on_startup() -> None:
     # Alembic owns the schema in deployment; this keeps a fresh clone runnable
     # with no migration step for the SQLite default.
     Base.metadata.create_all(bind=engine)
+
+    # Print the effective allow-list. A CORS rejection is invisible from the
+    # server's side — curl sees 200, the browser sees nothing — so the one place
+    # it can be diagnosed is the startup log.
+    logger.info("CORS allow-list: %s", settings.FRONTEND_ORIGINS)
+    if settings.FRONTEND_ORIGIN_REGEX:
+        logger.info("CORS allow-regex: %s", settings.FRONTEND_ORIGIN_REGEX)
 
     if settings.using_default_secrets:
         warnings.warn(

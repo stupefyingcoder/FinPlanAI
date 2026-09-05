@@ -28,9 +28,16 @@ services:
       - key: JWT_REFRESH_SECRET
         generateValue: true
 
-      # Set this to the Vercel URL once the frontend is deployed.
+      # Set this to the Vercel URL once the frontend is deployed. Leaving it
+      # blank is safe now — the app falls back to its defaults rather than an
+      # empty allow-list, which silently blocked every browser request.
       - key: FRONTEND_ORIGINS
         sync: false
+
+      # Vercel gives each preview deployment its own hostname; this covers them
+      # without listing every one.
+      - key: FRONTEND_ORIGIN_REGEX
+        value: https://.*\.vercel\.app
 
       # Cross-site cookies need Secure + SameSite=None: the API and the
       # dashboard are on different domains once deployed, and a Lax cookie is
