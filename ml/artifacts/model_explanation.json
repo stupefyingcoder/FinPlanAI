@@ -1,0 +1,35 @@
+{
+    "Input Features": {
+        "Description": "Features used to predict the portfolio allocation for a user.",
+        "Features": [
+            "Risk_Appetite",
+            "Age",
+            "Financial_Knowledge_Level",
+            "Investment_Goal_Wealth Growth",
+            "Investment_Goal_Retirement",
+            "Investment_Goal_Short-term Gains",
+            "Investment_Goal_Tax Saving",
+            "Investment_Goal_Children Education",
+            "Investment_Horizon_Years",
+            "Avg_Investment_Size_INR",
+            "Cluster_ID"
+        ],
+        "Notes": "Some features are raw values (e.g., Risk_Appetite, Financial_Knowledge_Level), while others are scaled (e.g., Age, Investment_Horizon_Years, Avg_Investment_Size_INR, and potentially others depending on the additional scaling). One-hot encoded features (e.g., Investment_Goal, Occupation) are also included."
+    },
+    "Output Features": {
+        "Description": "Predicted percentage allocation for each asset class in the user's portfolio.",
+        "Features": [
+            "Alloc_Stocks",
+            "Alloc_Bonds",
+            "Alloc_Mutual_Funds",
+            "Alloc_ETFs",
+            "Alloc_Real_Estate",
+            "Alloc_Crypto",
+            "Alloc_Commodities_Gold",
+            "Alloc_Savings_Accounts",
+            "Alloc_Retirement_Plans",
+            "Alloc_International_Equities"
+        ],
+        "Notes": "The output represents the percentage of the total investment allocated to each asset class, summing up to approximately 100%."
+    }
+}

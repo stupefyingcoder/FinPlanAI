@@ -1,0 +1,138 @@
+{
+  "architecture": "PortfolioAllocationNet",
+  "module": "finplan_ml.models.portfolio",
+  "n_features": 37,
+  "feature_names": [
+    "Age",
+    "Annual_Income",
+    "Monthly_Expenses",
+    "Savings_Rate(%)",
+    "Loan_EMI_Obligations",
+    "Current_Net_Worth",
+    "Debt_to_Income_Ratio",
+    "Credit_Score",
+    "Investment_Experience(Years)",
+    "Financial_Knowledge_Score",
+    "Goal_Amount(\u20b9)",
+    "Goal_Timeline(Years)",
+    "Saving_Amt",
+    "Risk_Taking_Ability_ordinal",
+    "Occupation_Business",
+    "Occupation_Retired",
+    "Occupation_Salaried",
+    "Occupation_Self-employed",
+    "Occupation_Student",
+    "Primary_Financial_Goal_Education",
+    "Primary_Financial_Goal_Emergency_Fund",
+    "Primary_Financial_Goal_House",
+    "Primary_Financial_Goal_Retirement",
+    "Primary_Financial_Goal_Wealth",
+    "Gender_Male",
+    "Gender_Female",
+    "Gender_Non-binary",
+    "Gender_Prefer_not_to_say",
+    "Marital_Status_Married",
+    "Marital_Status_Single",
+    "Marital_Status_Divorced",
+    "Marital_Status_Widowed",
+    "Cluster_0",
+    "Cluster_1",
+    "Cluster_2",
+    "Cluster_3",
+    "Cluster_4"
+  ],
+  "asset_classes": [
+    "RealEstate",
+    "Equity",
+    "Debt",
+    "Cash",
+    "Gold"
+  ],
+  "target_columns": [
+    "RealEstate_%",
+    "Equity_%",
+    "Debt_%",
+    "Cash_%",
+    "Gold_%"
+  ],
+  "scaler": {
+    "columns": [
+      "Age",
+      "Annual_Income",
+      "Monthly_Expenses",
+      "Savings_Rate(%)",
+      "Loan_EMI_Obligations",
+      "Current_Net_Worth",
+      "Debt_to_Income_Ratio",
+      "Credit_Score",
+      "Investment_Experience(Years)",
+      "Financial_Knowledge_Score",
+      "Goal_Amount(\u20b9)",
+      "Goal_Timeline(Years)",
+      "Saving_Amt"
+    ],
+    "mean": [
+      41.517714285714284,
+      1122049.1728571428,
+      41793.30542857143,
+      24.201657142857144,
+      17.015114285714287,
+      7252093.3902857145,
+      0.2972714285714286,
+      707.8185714285714,
+      7.6457428571428565,
+      5.885714285714286,
+      5536349.972857143,
+      10.298,
+      333332.08761245717
+    ],
+    "std": [
+      13.569377601504877,
+      674942.8249974076,
+      23290.087912239505,
+      12.523307929389283,
+      7.896562951431675,
+      10937599.972069351,
+      0.15472185273171418,
+      81.38216872130954,
+      6.291686394106642,
+      1.9344669163464392,
+      6230195.917023615,
+      5.4541185855814,
+      365403.923006091
+    ]
+  },
+  "seed": 42,
+  "split": {
+    "train": 3500,
+    "val": 750,
+    "test": 750
+  },
+  "metrics": {
+    "test": {
+      "mae_pp_overall": 2.769803285598755,
+      "mae_pp_per_class": {
+        "RealEstate": 3.081936836242676,
+        "Equity": 3.714836597442627,
+        "Debt": 3.1870884895324707,
+        "Cash": 2.352856397628784,
+        "Gold": 1.5122982263565063
+      },
+      "max_abs_err_pp": 15.241146087646484,
+      "mean_sum": 1.0
+    },
+    "baseline": {
+      "mae_pp_overall": 6.147043704986572,
+      "mae_pp_per_class": {
+        "RealEstate": 3.483721971511841,
+        "Equity": 12.505152702331543,
+        "Debt": 9.047656059265137,
+        "Cash": 3.9054341316223145,
+        "Gold": 1.793255090713501
+      },
+      "max_abs_err_pp": 38.3204460144043,
+      "mean_sum": 1.0000008344650269
+    },
+    "improvement_pct": 54.94088835984932
+  }
+}

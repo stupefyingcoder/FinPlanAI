@@ -1,0 +1,25 @@
+{
+  "feature_columns": [
+    "Age",
+    "Gender",
+    "Marital_Status",
+    "Loan_EMI_Obligations",
+    "Current_Net_Worth",
+    "Debt_to_Income_Ratio",
+    "Credit_Score",
+    "Risk_Taking_Ability",
+    "Goal_Amount(\u20b9)",
+    "Goal_Timeline(Years)",
+    "Occupation_Business",
+    "Occupation_Retired",
+    "Occupation_Salaried",
+    "Occupation_Self-employed",
+    "Occupation_Student",
+    "Primary_Financial_Goal_Education",
+    "Primary_Financial_Goal_Emergency_Fund",
+    "Primary_Financial_Goal_House",
+    "Primary_Financial_Goal_Retirement",
+    "Primary_Financial_Goal_Wealth",
+    "Saving_Amt"
+  ]
+}

@@ -1,0 +1,38 @@
+# Secrets — never commit
+.env
+.env.local
+*.pem.key
+credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+*.egg-info/
+.pytest_cache/
+
+# Node
+node_modules/
+npm-debug.log*
+.eslintcache
+
+# Builds
+build/
+dist/
+frontend/build/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Data & model scratch
+*.log
+ml/plans/user/*
+!ml/plans/user/.gitkeep
+
+# Local databases
+*.db
+*.sqlite3

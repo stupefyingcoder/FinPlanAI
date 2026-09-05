@@ -1,0 +1,70 @@
+# FinPlan AI — the whole product in one command.
+#
+#   docker compose up --build
+#   -> http://localhost:3000   dashboard (sign in as demo@finplan.ai / demo1234)
+#   -> http://localhost:8000/docs  API
+#
+# Three services. The planning agents run inside the API, so there is no separate
+# AI service to deploy, wake up or keep in visual step with the dashboard.
+
+name: finplan
+
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: finplan
+      MYSQL_USER: finplan
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-finplan_dev_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_dev_password}
+    healthcheck:
+      # Ask the server, not the port: MySQL accepts TCP before it accepts queries.
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD:-root_dev_password}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["api"]
+    environment:
+      DATABASE_URL: mysql+pymysql://finplan:${MYSQL_PASSWORD:-finplan_dev_password}@mysql:3306/finplan
+      # Dev defaults so the stack starts with no .env; override for anything real.
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-dev-access-secret-not-for-production-0001}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret-not-for-production-002}
+      FRONTEND_ORIGINS: http://localhost:3000
+      # Optional: without it the plan narrative is generated locally instead.
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    ports:
+      - "8000:8000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    restart: unless-stopped
+
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  mysql-data:

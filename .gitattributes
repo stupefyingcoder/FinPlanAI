@@ -1,0 +1,23 @@
+# Default: let git normalize text in the repository.
+* text=auto
+
+# These are executed inside Linux containers. A CRLF shebang fails with
+# "no such file or directory", which is a genuinely confusing way to learn that
+# a Windows checkout rewrote your line endings — so pin them to LF.
+*.sh            text eol=lf
+entrypoint.sh   text eol=lf
+Dockerfile      text eol=lf
+*.Dockerfile    text eol=lf
+nginx.conf      text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+
+# Binary artifacts git must never touch.
+*.pt      binary
+*.pth     binary
+*.pkl     binary
+*.joblib  binary
+*.faiss   binary
+*.pdf     binary
+*.png     binary
+*.h5      binary

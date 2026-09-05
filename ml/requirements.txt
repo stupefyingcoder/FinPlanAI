@@ -1,0 +1,46 @@
+# FinPlan ML — training and development.
+#
+# For serving, use requirements-serve.txt: it omits torch, which is needed only
+# to train. Inference runs in NumPy from the exported .npz weights.
+# The previous file omitted langgraph, langchain-huggingface and pdfplumber
+# (imported but unlisted) and had fastapi/uvicorn commented out, so a clean
+# install could not run the API.
+
+# Core
+numpy>=1.26,<2.3
+pandas>=2.2
+python-dotenv>=1.0
+pydantic>=2.6
+
+# API
+fastapi>=0.115
+uvicorn[standard]>=0.30
+
+# Models
+scikit-learn>=1.5
+joblib>=1.4
+torch>=2.4
+
+# GenAI + RAG
+google-generativeai>=0.7
+langchain>=0.2
+langchain-community>=0.2
+langchain-text-splitters>=0.2
+langchain-google-genai>=2.0
+faiss-cpu>=1.8
+
+# Documents
+PyPDF2>=3.0
+
+
+# Plotting, used by the training notebooks
+matplotlib>=3.8
+plotly>=5.20
+
+# Tests
+pytest>=8.0
+httpx>=0.27
+
+# Optional: only needed to regenerate the gold forecast, not to serve it.
+# Prophet is heavy to build on Windows and the committed forecast is static.
+# prophet>=1.1.5

@@ -1,0 +1,10 @@
+{
+  "n_clusters": 5,
+  "cluster_labels": {
+    "0": "High NW • Long-Term Retirement",
+    "1": "Mid NW • Short-Term Aspirers",
+    "2": "Low NW • Emergency/Liquidity",
+    "3": "Young • Aggressive Growth",
+    "4": "Older • Conservative Investors"
+  }
+}
