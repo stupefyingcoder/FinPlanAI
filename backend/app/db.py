@@ -14,9 +14,20 @@ class Base(DeclarativeBase):
     pass
 
 
-_connect_args = {"check_same_thread": False} if settings.DATABASE_URL.startswith("sqlite") else {}
+_url = settings.DATABASE_URL
 
-engine = create_engine(settings.DATABASE_URL, connect_args=_connect_args, pool_pre_ping=True)
+# Managed Postgres providers hand out postgres:// URLs, which SQLAlchemy 2 does
+# not recognise; normalise rather than making every deploy edit its own env var.
+if _url.startswith("postgres://"):
+    _url = _url.replace("postgres://", "postgresql+psycopg://", 1)
+elif _url.startswith("postgresql://"):
+    _url = _url.replace("postgresql://", "postgresql+psycopg://", 1)
+
+_connect_args = {"check_same_thread": False} if _url.startswith("sqlite") else {}
+
+# pool_recycle: free tiers drop idle connections, and a stale one surfaces as a
+# confusing error on the first request after a quiet period.
+engine = create_engine(_url, connect_args=_connect_args, pool_pre_ping=True, pool_recycle=300)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 

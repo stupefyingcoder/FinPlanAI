@@ -1,0 +1,55 @@
+# Render blueprint — API and database.
+#
+# The dashboard deploys separately to Vercel (see vercel.json); a static build on
+# a CDN is free and faster than serving it from the API container.
+#
+# Deploy: Render dashboard -> New -> Blueprint -> point at this repository.
+# Then set GEMINI_API_KEY in the service's environment. Everything else has a
+# default, and every model prediction works without that key.
+
+services:
+  - type: web
+    name: finplan-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    region: singapore # closest to the intended users
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: finplan-db
+          property: connectionString
+
+      # Generated once by Render and kept; rotating them logs everyone out.
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+
+      # Set this to the Vercel URL once the frontend is deployed.
+      - key: FRONTEND_ORIGINS
+        sync: false
+
+      # Cross-site cookies need Secure + SameSite=None: the API and the
+      # dashboard are on different domains once deployed, and a Lax cookie is
+      # silently dropped, which looks like "login works but I get logged out".
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAMESITE
+        value: none
+
+      # Optional. Without it the planner answers from the profile instead.
+      - key: GEMINI_API_KEY
+        sync: false
+
+      # A multi-agent reply is several sequential calls; free instances are slow.
+      - key: LLM_TIMEOUT_SECONDS
+        value: "45"
+
+databases:
+  - name: finplan-db
+    plan: free
+    databaseName: finplan
+    region: singapore
