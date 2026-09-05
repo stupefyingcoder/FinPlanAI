@@ -37,7 +37,7 @@ COPY backend/entrypoint.sh /app/entrypoint.sh
 # shebang fails in the container with "no such file or directory", an error that
 # points at the interpreter rather than the real cause.
 RUN tr -d '\r' < /app/entrypoint.sh > /app/entrypoint.tmp && mv /app/entrypoint.tmp /app/entrypoint.sh && chmod +x /app/entrypoint.sh
-$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
 
 WORKDIR /app/backend
 EXPOSE 8000
